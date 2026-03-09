@@ -6,6 +6,8 @@ import '../providers/auth_provider.dart';
 import 'request_document_screen.dart';
 import 'my_requests_screen.dart';
 import 'profile_screen.dart';
+import 'notification_screen.dart';
+import '../providers/notification_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -19,7 +21,7 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Citizen Portal'),
         actions: [
-          _buildNotificationIcon(),
+          _buildNotificationIcon(context),
           const SizedBox(width: 8),
         ],
       ),
@@ -71,7 +73,7 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Text(
             'Welcome back,',
-            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
@@ -82,7 +84,7 @@ class DashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -92,7 +94,7 @@ class DashboardScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'You have 2 pending document requests awaiting review.',
-                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
                   ),
                 ),
               ],
@@ -149,7 +151,7 @@ class DashboardScreen extends StatelessWidget {
           'System News',
           const Color(0xFFF3E5F5),
           const Color(0xFF7B1FA2),
-          null,
+          const NotificationScreen(),
           300,
         ),
       ],
@@ -239,27 +241,35 @@ class DashboardScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1);
   }
 
-  Widget _buildNotificationIcon() {
+  Widget _buildNotificationIcon(BuildContext context) {
+    final unreadCount = context.watch<NotificationProvider>().unreadCount;
+
     return Stack(
       alignment: Alignment.center,
       children: [
         IconButton(
-          onPressed: () {},
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const NotificationScreen())),
           icon: const Icon(Icons.notifications_none_rounded, size: 28),
         ),
-        Positioned(
-          right: 12,
-          top: 12,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: Colors.redAccent,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+        if (unreadCount > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$unreadCount',
+                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
