@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Animated Logo
+                // Animated Logo using asset image
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -77,10 +77,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.account_balance_rounded,
-                    size: 80,
-                    color: Color(0xFF0D47A1),
+                  child: Image.asset(
+                    'lib/assets/image/lg.webp',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.contain,
                   ),
                 ).animate()
                  .scale(duration: 800.ms, curve: Curves.easeOutBack)

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gsiac/screens/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
 import 'register_screen.dart';
-import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            MaterialPageRoute(builder: (context) => DashboardScreen()),
           );
         }
       } else {
@@ -53,19 +53,29 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         children: [
           // Animated Gradient Background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0D47A1),
-                  Color(0xFF1976D2),
-                  Color(0xFF00B0FF),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(duration: 800.ms),
+          // Background Image
+Positioned.fill(
+  child: Image.asset(
+    'lib/assets/image/bg.webp',
+    fit: BoxFit.cover,
+  ),
+),
+
+// Dark overlay
+Positioned.fill(
+  child: Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.black.withOpacity(0.45),
+          Colors.black.withOpacity(0.25),
+        ],
+      ),
+    ),
+  ),
+),
 
           // Decorative Circles
           Positioned(
@@ -98,24 +108,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           // Logo Section
                           Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.account_balance_rounded,
-                              size: 50,
-                              color: Color(0xFF0D47A1),
-                            ),
-                          ).animate().scale(delay: 200.ms, duration: 500.ms, curve: Curves.easeOutBack),
+  padding: const EdgeInsets.all(4),
+  decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.9),
+    shape: BoxShape.circle,
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.1),
+        blurRadius: 20,
+        spreadRadius: 5,
+      ),
+    ],
+  ),
+  child: ClipOval(
+    child: Image.asset(
+      'lib/assets/image/lg.webp',
+      width: 82,
+      height: 82,
+      fit: BoxFit.cover,
+    ),
+  ),
+).animate().scale(delay: 200.ms, duration: 500.ms, curve: Curves.easeOutBack),
                           
                           const SizedBox(height: 24),
                           
@@ -203,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (mounted) {
                                   Navigator.pushReplacement(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                                    MaterialPageRoute(builder: (context) => DashboardScreen()),
                                   );
                                 }
                               },

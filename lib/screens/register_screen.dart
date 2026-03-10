@@ -107,19 +107,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         children: [
           // Animated Gradient Background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0D47A1),
-                  Color(0xFF1976D2),
-                  Color(0xFF00B0FF),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(duration: 800.ms),
+          // Background Image
+Positioned.fill(
+  child: Image.asset(
+    'lib/assets/image/bg.webp',
+    fit: BoxFit.cover,
+  ),
+),
+
+// Dark overlay
+Positioned.fill(
+  child: Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.black.withOpacity(0.45),
+          Colors.black.withOpacity(0.25),
+        ],
+      ),
+    ),
+  ),
+),
 
           // Decorative Circles
           Positioned(

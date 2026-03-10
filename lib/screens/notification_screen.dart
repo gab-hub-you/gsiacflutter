@@ -14,9 +14,26 @@ class NotificationScreen extends StatelessWidget {
     final notifications = notificationProvider.notifications;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        backgroundColor: Colors.white.withOpacity(0.15),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        flexibleSpace: ClipRect(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
+              ),
+            ),
+          ),
+        ),
         actions: [
           if (notifications.isNotEmpty)
             TextButton(
@@ -25,28 +42,57 @@ class NotificationScreen extends StatelessWidget {
             ),
         ],
       ),
-      body: notifications.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.notifications_none_rounded, size: 80, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No notifications yet',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 18),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              itemCount: notifications.length,
-              itemBuilder: (ctx, index) {
-                final notification = notifications[index];
-                return _buildNotificationCard(context, notificationProvider, notification, index);
-              },
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
             ),
+          ),
+
+          // Dark overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          notifications.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_none_rounded, size: 80, color: Colors.white54),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No notifications yet',
+                        style: TextStyle(color: Colors.white70, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
+                  itemCount: notifications.length,
+                  itemBuilder: (ctx, index) {
+                    final notification = notifications[index];
+                    return _buildNotificationCard(context, notificationProvider, notification, index);
+                  },
+                ),
+        ],
+      ),
     );
   }
 
@@ -94,7 +140,7 @@ class NotificationScreen extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.92),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(

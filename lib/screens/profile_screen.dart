@@ -35,8 +35,8 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                   content: Text('Ticket #7721 submitted for review.'),
-                   behavior: SnackBarBehavior.floating,
+                  content: Text('Ticket #7721 submitted for review.'),
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             },
@@ -53,52 +53,101 @@ class ProfileScreen extends StatelessWidget {
     final user = context.watch<AuthProvider>().user;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
-      appBar: AppBar(title: const Text('My Identity'), elevation: 0),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileHeader(user),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildProfileCard(
-                    'PERSONAL RECORDS',
-                    Icons.fingerprint_rounded,
-                    [
-                      _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
-                      _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
-                      _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
-                    ],
-                  ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
-                  const SizedBox(height: 16),
-                  _buildProfileCard(
-                    'RESIDENCE & STATUS',
-                    Icons.home_work_rounded,
-                    [
-                      _buildInfoRow('Primary Address', user?.address ?? '123 Mabini St, Manila'),
-                      _buildInfoRow('Portal Status', 'Verified Citizen', isStatus: true),
-                    ],
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: () => _showCorrectionDialog(context),
-                    icon: const Icon(Icons.edit_document),
-                    label: const Text('Request Information Correction'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 60),
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.orange[900],
-                      side: BorderSide(color: Colors.orange[200]!),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ).animate().fadeIn(delay: 300.ms).scale(),
-                ],
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.white.withOpacity(0.15),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'My Identity',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        flexibleSpace: ClipRect(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
               ),
             ),
-          ],
+          ),
         ),
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // Dark overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Main Content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildProfileHeader(user),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      _buildProfileCard(
+                        'PERSONAL RECORDS',
+                        Icons.fingerprint_rounded,
+                        [
+                          _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
+                          _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
+                          _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
+                        ],
+                      ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+                      const SizedBox(height: 16),
+                      _buildProfileCard(
+                        'RESIDENCE & STATUS',
+                        Icons.home_work_rounded,
+                        [
+                          _buildInfoRow('Primary Address', user?.address ?? '123 Mabini St, Manila'),
+                          _buildInfoRow('Portal Status', 'Verified Citizen', isStatus: true),
+                        ],
+                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        onPressed: () => _showCorrectionDialog(context),
+                        icon: const Icon(Icons.edit_document),
+                        label: const Text('Request Information Correction'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 60),
+                          backgroundColor: Colors.white.withOpacity(0.92),
+                          foregroundColor: Colors.orange[900],
+                          side: BorderSide(color: Colors.orange[200]!),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ).animate().fadeIn(delay: 300.ms).scale(),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -106,11 +155,21 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileHeader(dynamic user) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D47A1),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withOpacity(0.4),
+            Colors.transparent,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
+        ),
       ),
-      padding: const EdgeInsets.only(bottom: 40, top: 20),
+      padding: const EdgeInsets.fromLTRB(24, 110, 24, 40),
       child: Column(
         children: [
           Container(
@@ -125,7 +184,12 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             user?.fullName ?? 'Juan Dela Cruz',
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+            ),
           ),
           Text(
             'LGU MEMBER SINCE 2024',
@@ -139,8 +203,11 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileCard(String title, IconData icon, List<Widget> items) {
     return Card(
       elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.grey[200]!)),
+      color: Colors.white.withOpacity(0.92),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

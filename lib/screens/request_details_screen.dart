@@ -15,24 +15,73 @@ class RequestDetailsScreen extends StatelessWidget {
     if (request.status == RequestStatus.approved || request.status == RequestStatus.rejected) currentStep = 2;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
-      appBar: AppBar(title: const Text('Track Application'), elevation: 0),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildStickyHeader(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                children: [
-                   _buildInfoCard(),
-                   const SizedBox(height: 24),
-                   _buildTrackingStepper(context, currentStep),
-                ],
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.white.withOpacity(0.15),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Track Application',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        flexibleSpace: ClipRect(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
               ),
             ),
-          ],
+          ),
         ),
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // Dark overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildStickyHeader(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    children: [
+                      _buildInfoCard(),
+                      const SizedBox(height: 24),
+                      _buildTrackingStepper(context, currentStep),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -40,14 +89,29 @@ class RequestDetailsScreen extends StatelessWidget {
   Widget _buildStickyHeader() {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF0D47A1),
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 110, 24, 32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withOpacity(0.35),
+            Colors.transparent,
+          ],
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             request.trackingNumber,
-            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 1),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+              shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
+            ),
           ).animate().fadeIn().slideX(),
           Text(
             'Application ID for ${request.type}',
@@ -61,8 +125,11 @@ class RequestDetailsScreen extends StatelessWidget {
   Widget _buildInfoCard() {
     return Card(
       elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.grey[200]!)),
+      color: Colors.white.withOpacity(0.92),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -89,8 +156,11 @@ class RequestDetailsScreen extends StatelessWidget {
   Widget _buildTrackingStepper(BuildContext context, int currentStep) {
     return Card(
       elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.grey[200]!)),
+      color: Colors.white.withOpacity(0.92),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Stepper(
@@ -117,7 +187,9 @@ class RequestDetailsScreen extends StatelessWidget {
                 request.status == RequestStatus.rejected ? 'Application Declined' : 'Ready for Issuance',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(request.status == RequestStatus.rejected ? 'Review complete with issues' : 'Final stage processing'),
+              subtitle: Text(request.status == RequestStatus.rejected
+                  ? 'Review complete with issues'
+                  : 'Final stage processing'),
               content: _buildTerminalContent(context),
               isActive: currentStep >= 2,
               state: request.status == RequestStatus.rejected ? StepState.error : StepState.complete,
@@ -126,8 +198,7 @@ class RequestDetailsScreen extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1);
-  } 
-  
+  }
 
   Widget _buildTerminalContent(BuildContext context) {
     if (request.status == RequestStatus.approved) {
@@ -137,8 +208,8 @@ class RequestDetailsScreen extends StatelessWidget {
           const Text('Your document is authorized. Please present your ID at the Barangay Hall for release.'),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () {}, 
-            icon: const Icon(Icons.file_download_outlined), 
+            onPressed: () {},
+            icon: const Icon(Icons.file_download_outlined),
             label: const Text('Download Soft Copy'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF43A047),
@@ -152,7 +223,11 @@ class RequestDetailsScreen extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         width: double.infinity,
-        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.red[100]!)),
+        decoration: BoxDecoration(
+          color: Colors.red[50],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.red[100]!),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -169,4 +244,3 @@ class RequestDetailsScreen extends StatelessWidget {
     return const SizedBox.shrink();
   }
 }
-

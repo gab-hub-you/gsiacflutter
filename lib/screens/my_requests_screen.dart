@@ -25,18 +25,56 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     final provider = context.watch<DocumentProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
-      appBar: AppBar(title: const Text('My Applications'), elevation: 0),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              itemCount: provider.requests.length,
-              itemBuilder: (context, index) {
-                final req = provider.requests[index];
-                return _buildRequestCard(req, index);
-              },
+      extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.white.withOpacity(0.15),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'My Applications',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
             ),
+          ),
+
+          // Dark overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          provider.isLoading
+              ? const Center(child: CircularProgressIndicator(color: Colors.white))
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
+                  itemCount: provider.requests.length,
+                  itemBuilder: (context, index) {
+                    final req = provider.requests[index];
+                    return _buildRequestCard(req, index);
+                  },
+                ),
+        ],
+      ),
     );
   }
 
@@ -44,10 +82,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: Colors.white,
+      color: Colors.white.withOpacity(0.92),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: Colors.white.withOpacity(0.5)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -125,20 +163,20 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     Color color;
     String text;
     switch (status) {
-      case RequestStatus.pending: 
-        color = Colors.amber[700]!; 
+      case RequestStatus.pending:
+        color = Colors.amber[700]!;
         text = 'Pending';
         break;
-      case RequestStatus.underReview: 
-        color = const Color(0xFF0288D1); 
+      case RequestStatus.underReview:
+        color = const Color(0xFF0288D1);
         text = 'Reviewing';
         break;
-      case RequestStatus.approved: 
-        color = const Color(0xFF43A047); 
+      case RequestStatus.approved:
+        color = const Color(0xFF43A047);
         text = 'Ready';
         break;
-      case RequestStatus.rejected: 
-        color = Colors.redAccent; 
+      case RequestStatus.rejected:
+        color = Colors.redAccent;
         text = 'Declined';
         break;
     }
