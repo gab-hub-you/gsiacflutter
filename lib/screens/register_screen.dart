@@ -20,6 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   DateTime? _selectedDate;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   void _presentDatePicker() async {
     final pickedDate = await showDatePicker(
@@ -73,7 +75,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: const Text('Account Recorded'),
-            content: const Text('Registration successful. You may now proceed to the secure login gateway.'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Registration successful!'),
+                const SizedBox(height: 16),
+                const Text(
+                  'IMPORTANT: Please check your email inbox (and spam folder) for a confirmation link. You must click the link to activate your account before you can log in.',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
+                ),
+              ],
+            ),
             actions: [
               ElevatedButton(
                 onPressed: () {
@@ -88,6 +101,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: const Text('Proceed to Login'),
               ),
             ],
+          ),
+        );
+      } else if (!success && mounted) {
+        final error = authProvider.errorMessage ?? 'Registration failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
           ),
         );
       }
@@ -210,7 +232,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _passwordController,
                             label: 'Secure Password',
                             icon: Icons.lock_outline_rounded,
-                            isPassword: true,
+                            isPassword: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
                           ).animate().fadeIn(delay: 800.ms).slideX(begin: -0.1),
 
                           const SizedBox(height: 16),
@@ -219,7 +248,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _confirmPasswordController,
                             label: 'Confirm Password',
                             icon: Icons.verified_user_outlined,
-                            isPassword: true,
+                            isPassword: _obscureConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                            ),
                             validator: (value) {
                               if (value == null || value.isEmpty) return 'Please confirm your password';
                               if (value != _passwordController.text) return 'Passwords do not match';
@@ -304,6 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String label,
     required IconData icon,
     bool isPassword = false,
+    Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -314,6 +351,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         labelText: label,
         labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
         prefixIcon: Icon(icon, color: Colors.white70),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white.withOpacity(0.1),
         enabledBorder: OutlineInputBorder(

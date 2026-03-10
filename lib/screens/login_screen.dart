@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -35,9 +36,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         if (mounted) {
+          final error = authProvider.errorMessage ?? 'Invalid email or password';
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid email or password'),
+            SnackBar(
+              content: Text(error),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.redAccent,
             ),
@@ -160,7 +162,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             label: 'Password',
                             icon: Icons.lock_outline_rounded,
-                            isPassword: true,
+                            isPassword: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
                           ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.1),
                           
                           const SizedBox(height: 32),
@@ -190,33 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                             ),
                           ).animate().fadeIn(delay: 800.ms).scale(),
-                          
-                          const SizedBox(height: 16),
-
-                          // Demo Mode Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: OutlinedButton(
-                              onPressed: () async {
-                                await Provider.of<AuthProvider>(context, listen: false).loginAsDemo();
-                                if (mounted) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                                  );
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.white54),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text('Guest Explorer Mode'),
-                            ),
-                          ).animate().fadeIn(delay: 900.ms).scale(),
                           
                           const SizedBox(height: 24),
 
@@ -277,6 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     required IconData icon,
     bool isPassword = false,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -286,6 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
         prefixIcon: Icon(icon, color: Colors.white70),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white.withOpacity(0.1),
         enabledBorder: OutlineInputBorder(
