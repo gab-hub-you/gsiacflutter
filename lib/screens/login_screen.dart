@@ -213,36 +213,6 @@ Positioned.fill(
                             ),
                           ).animate().fadeIn(delay: 800.ms).scale(),
                           
-<<<<<<< HEAD
-                          const SizedBox(height: 16),
-
-                          // Demo Mode Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: OutlinedButton(
-                              onPressed: () async {
-                                await Provider.of<AuthProvider>(context, listen: false).loginAsDemo();
-                                if (mounted) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => DashboardScreen()),
-                                  );
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.white54),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text('Guest Explorer Mode'),
-                            ),
-                          ).animate().fadeIn(delay: 900.ms).scale(),
-                          
-=======
->>>>>>> 4181dc23c9569f5a3ae199f7394ca8ea810c8f39
                           const SizedBox(height: 24),
 
                           Row(

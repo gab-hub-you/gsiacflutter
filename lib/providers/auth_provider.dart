@@ -112,13 +112,9 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
-    } catch (e) {
-      _errorMessage = "An unexpected error occurred during registration. Please try again.";
-      _isLoading = false;
-      notifyListeners();
-      return false;
     }
   }
+
 
   Future<void> logout() async {
     await Supabase.instance.client.auth.signOut();
