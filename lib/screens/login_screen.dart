@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -35,9 +36,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         if (mounted) {
+          final error = authProvider.errorMessage ?? 'Invalid email or password';
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid email or password'),
+            SnackBar(
+              content: Text(error),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.redAccent,
             ),
@@ -173,7 +175,14 @@ Positioned.fill(
                             controller: _passwordController,
                             label: 'Password',
                             icon: Icons.lock_outline_rounded,
-                            isPassword: true,
+                            isPassword: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
                           ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.1),
                           
                           const SizedBox(height: 32),
@@ -204,6 +213,7 @@ Positioned.fill(
                             ),
                           ).animate().fadeIn(delay: 800.ms).scale(),
                           
+<<<<<<< HEAD
                           const SizedBox(height: 16),
 
                           // Demo Mode Button
@@ -231,6 +241,8 @@ Positioned.fill(
                             ),
                           ).animate().fadeIn(delay: 900.ms).scale(),
                           
+=======
+>>>>>>> 4181dc23c9569f5a3ae199f7394ca8ea810c8f39
                           const SizedBox(height: 24),
 
                           Row(
@@ -290,6 +302,7 @@ Positioned.fill(
     required String label,
     required IconData icon,
     bool isPassword = false,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -299,6 +312,7 @@ Positioned.fill(
         labelText: label,
         labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
         prefixIcon: Icon(icon, color: Colors.white70),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white.withOpacity(0.1),
         enabledBorder: OutlineInputBorder(
