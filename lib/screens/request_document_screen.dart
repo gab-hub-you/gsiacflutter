@@ -13,7 +13,7 @@ class RequestDocumentScreen extends StatefulWidget {
 
 class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedType = 'Barangay Clearance';
+  String? _selectedType;
   final _purposeController = TextEditingController();
   PlatformFile? _attachedFile;
 
@@ -34,7 +34,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
     if (_formKey.currentState!.validate()) {
       final provider = Provider.of<DocumentProvider>(context, listen: false);
       final trk = await provider.submitRequest(
-        type: _selectedType,
+        type: _selectedType!,
         purpose: _purposeController.text,
         attachmentPath: _attachedFile?.path,
       );
@@ -141,7 +141,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           DropdownButtonFormField<String>(
                             value: _selectedType,
                             decoration: InputDecoration(
-                              labelText: 'Select Certificate',
+                              hintText: 'Select Certificate',
                               prefixIcon: const Icon(Icons.description_outlined),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.92),
@@ -152,6 +152,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                             ),
                             items: _docTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
                             onChanged: (v) => setState(() => _selectedType = v!),
+                            validator: (v) => v == null ? 'Please select a certificate' : null,
                           ),
                           const SizedBox(height: 24),
                           _buildStepTitle('2. State Your Purpose'),
