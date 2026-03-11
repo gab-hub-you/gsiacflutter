@@ -126,6 +126,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // Animated Gradient Background
@@ -134,6 +136,7 @@ Positioned.fill(
   child: Image.asset(
     'lib/assets/image/bg.webp',
     fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
   ),
 ),
 

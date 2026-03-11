@@ -37,12 +37,14 @@ class RequestDetailsScreen extends StatelessWidget {
         ),
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Background Image
           Positioned.fill(
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
 
@@ -63,22 +65,24 @@ class RequestDetailsScreen extends StatelessWidget {
           ),
 
           // Content
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildStickyHeader(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    children: [
-                      _buildInfoCard(),
-                      const SizedBox(height: 24),
-                      _buildTrackingStepper(context, currentStep),
-                      const SizedBox(height: 32),
-                    ],
+          Positioned.fill(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildStickyHeader(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    child: Column(
+                      children: [
+                        _buildInfoCard(),
+                        const SizedBox(height: 24),
+                        _buildTrackingStepper(context, currentStep),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

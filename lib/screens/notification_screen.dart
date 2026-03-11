@@ -49,6 +49,7 @@ class NotificationScreen extends StatelessWidget {
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
 

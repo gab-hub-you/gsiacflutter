@@ -37,12 +37,14 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         ),
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Background Image
           Positioned.fill(
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
 
@@ -63,16 +65,18 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           ),
 
           // Content
-          provider.isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
-                  itemCount: provider.requests.length,
-                  itemBuilder: (context, index) {
-                    final req = provider.requests[index];
-                    return _buildRequestCard(req, index);
-                  },
-                ),
+          Positioned.fill(
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
+                    itemCount: provider.requests.length,
+                    itemBuilder: (context, index) {
+                      final req = provider.requests[index];
+                      return _buildRequestCard(req, index);
+                    },
+                  ),
+          ),
         ],
       ),
     );

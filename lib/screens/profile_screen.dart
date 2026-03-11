@@ -75,12 +75,14 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Background Image
           Positioned.fill(
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
 
@@ -101,50 +103,52 @@ class ProfileScreen extends StatelessWidget {
           ),
 
           // Main Content
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildProfileHeader(user),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      _buildProfileCard(
-                        'PERSONAL RECORDS',
-                        Icons.fingerprint_rounded,
-                        [
-                          _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
-                          _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
-                          _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
-                        ],
-                      ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
-                      const SizedBox(height: 16),
-                      _buildProfileCard(
-                        'RESIDENCE & STATUS',
-                        Icons.home_work_rounded,
-                        [
-                          _buildInfoRow('Primary Address', user?.address ?? '123 Mabini St, Manila'),
-                          _buildInfoRow('Portal Status', 'Verified Citizen', isStatus: true),
-                        ],
-                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                      const SizedBox(height: 32),
-                      ElevatedButton.icon(
-                        onPressed: () => _showCorrectionDialog(context),
-                        icon: const Icon(Icons.edit_document),
-                        label: const Text('Request Information Correction'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 60),
-                          backgroundColor: Colors.white.withOpacity(0.92),
-                          foregroundColor: Colors.orange[900],
-                          side: BorderSide(color: Colors.orange[200]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                      ).animate().fadeIn(delay: 300.ms).scale(),
-                      const SizedBox(height: 32),
-                    ],
+          Positioned.fill(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildProfileHeader(user),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        _buildProfileCard(
+                          'PERSONAL RECORDS',
+                          Icons.fingerprint_rounded,
+                          [
+                            _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
+                            _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
+                            _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
+                          ],
+                        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+                        const SizedBox(height: 16),
+                        _buildProfileCard(
+                          'RESIDENCE & STATUS',
+                          Icons.home_work_rounded,
+                          [
+                            _buildInfoRow('Primary Address', user?.address ?? '123 Mabini St, Manila'),
+                            _buildInfoRow('Portal Status', 'Verified Citizen', isStatus: true),
+                          ],
+                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                        const SizedBox(height: 32),
+                        ElevatedButton.icon(
+                          onPressed: () => _showCorrectionDialog(context),
+                          icon: const Icon(Icons.edit_document),
+                          label: const Text('Request Information Correction'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 60),
+                            backgroundColor: Colors.white.withOpacity(0.92),
+                            foregroundColor: Colors.orange[900],
+                            side: BorderSide(color: Colors.orange[200]!),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ).animate().fadeIn(delay: 300.ms).scale(),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

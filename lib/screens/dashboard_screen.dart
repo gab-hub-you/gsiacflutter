@@ -49,6 +49,7 @@ class DashboardScreen extends StatelessWidget {
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
           Positioned.fill(
@@ -267,14 +268,15 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             const Divider(height: 32),
-            OutlinedButton(
+            ElevatedButton(
               onPressed: () => Navigator.push(
                   context, MaterialPageRoute(builder: (ctx) => const MyRequestsScreen())),
-              style: OutlinedButton.styleFrom(
+              style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                side: const BorderSide(color: Color(0xFF0D47A1)),
-                foregroundColor: const Color(0xFF0D47A1),
+                backgroundColor: const Color(0xFF0D47A1),
+                foregroundColor: Colors.white,
+                elevation: 0,
               ),
               child: const Text('View All Tracking History'),
             ),

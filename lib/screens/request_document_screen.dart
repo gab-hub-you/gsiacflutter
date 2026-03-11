@@ -73,8 +73,9 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.white.withOpacity(0.15),
         elevation: 0,
@@ -95,12 +96,14 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
         ),
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Background Image
           Positioned.fill(
             child: Image.asset(
               'lib/assets/image/bg.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
 
@@ -121,76 +124,78 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
           ),
 
           // Main Content
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildFormHeader(),
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildStepTitle('1. Document Selection'),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _selectedType,
-                          decoration: InputDecoration(
-                            labelText: 'Select Certificate',
-                            prefixIcon: const Icon(Icons.description_outlined),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.92),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
+          Positioned.fill(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildFormHeader(),
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildStepTitle('1. Document Selection'),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _selectedType,
+                            decoration: InputDecoration(
+                              labelText: 'Select Certificate',
+                              prefixIcon: const Icon(Icons.description_outlined),
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.92),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
+                            items: _docTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                            onChanged: (v) => setState(() => _selectedType = v!),
                           ),
-                          items: _docTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
-                          onChanged: (v) => setState(() => _selectedType = v!),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildStepTitle('2. State Your Purpose'),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _purposeController,
-                          decoration: InputDecoration(
-                            hintText: 'e.g. For employment, ID application, etc.',
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.92),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
+                          const SizedBox(height: 24),
+                          _buildStepTitle('2. State Your Purpose'),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _purposeController,
+                            decoration: InputDecoration(
+                              hintText: 'e.g. For employment, ID application, etc.',
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.92),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
+                            maxLines: 4,
+                            validator: (v) => v!.isEmpty ? 'Please specify your purpose' : null,
                           ),
-                          maxLines: 4,
-                          validator: (v) => v!.isEmpty ? 'Please specify your purpose' : null,
-                        ),
-                        const SizedBox(height: 24),
-                        _buildStepTitle('3. Supporting Evidence'),
-                        const SizedBox(height: 12),
-                        _buildFileUploadButton(),
-                        const SizedBox(height: 48),
-                        ElevatedButton(
-                          onPressed: context.watch<DocumentProvider>().isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0D47A1),
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 60),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 4,
-                            shadowColor: const Color(0xFF0D47A1).withOpacity(0.4),
+                          const SizedBox(height: 24),
+                          _buildStepTitle('3. Supporting Evidence'),
+                          const SizedBox(height: 12),
+                          _buildFileUploadButton(),
+                          const SizedBox(height: 48),
+                          ElevatedButton(
+                            onPressed: context.watch<DocumentProvider>().isLoading ? null : _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0D47A1),
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(double.infinity, 60),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 4,
+                              shadowColor: const Color(0xFF0D47A1).withOpacity(0.4),
+                            ),
+                            child: context.watch<DocumentProvider>().isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text('Review & Submit Application',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
-                          child: context.watch<DocumentProvider>().isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text('Review & Submit Application',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ),
-                      ],
-                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                        ],
+                      ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
