@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gsiac/screens/dashboard_screen.dart';
+import 'dashboard_screen.dart';
+import 'citizen_validation_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
+import '../models/citizen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,10 +31,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (success) {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => DashboardScreen()),
-          );
+          final user = authProvider.user;
+          if (user?.verificationStatus == VerificationStatus.unverified) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const CitizenValidationScreen()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => DashboardScreen()),
+            );
+          }
         }
       } else {
         if (mounted) {

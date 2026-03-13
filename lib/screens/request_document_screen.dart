@@ -3,6 +3,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/document_provider.dart';
+import '../providers/auth_provider.dart';
+import '../models/citizen.dart';
+import '../models/document_request.dart';
+import 'citizen_validation_screen.dart';
 
 class RequestDocumentScreen extends StatefulWidget {
   const RequestDocumentScreen({super.key});
@@ -13,15 +17,36 @@ class RequestDocumentScreen extends StatefulWidget {
 
 class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
+  final Map<IssuingOffice, List<String>> _categorizedDocs = {
+    IssuingOffice.barangay: [
+      'Barangay Clearance',
+      'Certificate of Residency',
+      'Certificate of Indigency',
+      'Barangay Business Clearance',
+      'Certificate of No Objection',
+      'Barangay ID',
+    ],
+    IssuingOffice.municipal: [
+      'Community Tax Certificate (Cedula)',
+      'Business Permit',
+      'Birth Certificate',
+      'Marriage Certificate',
+      'Death Certificate',
+      'Real Property Tax Clearance',
+      'Maps and Planning Documents',
+    ],
+  };
+
+  IssuingOffice? _selectedOffice;
   String? _selectedType;
   final _purposeController = TextEditingController();
   PlatformFile? _attachedFile;
 
-  final List<String> _docTypes = [
-    'Barangay Clearance',
-    'Certificate of Residency',
-    'Indigency Certificate',
-  ];
+  @override
+  void dispose() {
+    _purposeController.dispose();
+    super.dispose();
+  }
 
   void _pickFile() async {
     final result = await FilePicker.platform.pickFiles();
@@ -31,11 +56,55 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
   }
 
   void _submit() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final user = auth.user;
+    final status = user?.verificationStatus ?? VerificationStatus.unverified;
+
+    if (status != VerificationStatus.verified) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(status == VerificationStatus.unverified ? 'Verification Required' : 'Verification Pending'),
+          content: Text(
+            status == VerificationStatus.unverified 
+              ? 'You must be a verified citizen to submit document requests. Please complete your profile validation first.'
+              : 'Your verification is currently under review. Please wait for staff approval before submitting requests.',
+            style: const TextStyle(color: Color(0xFF0D47A1)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+            if (status == VerificationStatus.unverified)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CitizenValidationScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D47A1),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Verify Now'),
+              )
+          ],
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final provider = Provider.of<DocumentProvider>(context, listen: false);
       final trk = await provider.submitRequest(
         type: _selectedType!,
         purpose: _purposeController.text,
+        office: _selectedOffice!,
         attachmentPath: _attachedFile?.path,
       );
 
@@ -53,6 +122,12 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                 const Text('Application Submitted', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 const SizedBox(height: 8),
                 Text('Your tracking number is $trk', textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                const Text(
+                  'Note: Municipal requests are first validated by the Barangay.',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
             actions: [
@@ -72,12 +147,15 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final isVerified = user?.verificationStatus == VerificationStatus.verified;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.15),
+        backgroundColor: Colors.white.withValues(alpha: 0.15),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -87,9 +165,9 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
         flexibleSpace: ClipRect(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               border: Border(
-                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
+                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
               ),
             ),
           ),
@@ -115,8 +193,8 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.45),
-                    Colors.black.withOpacity(0.25),
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
                   ],
                 ),
               ),
@@ -128,7 +206,31 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildFormHeader(),
+                   _buildFormHeader(),
+                  if (!isVerified)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded, color: Colors.orangeAccent),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Verification Required: You can fill out this form, but submission requires a verified account.',
+                                style: TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn().slideY(begin: -0.2),
+                    ),
                   Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Form(
@@ -136,33 +238,45 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildStepTitle('1. Document Selection'),
+                          _buildStepTitle('1. Issuing Office'),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              _buildOfficeTab(IssuingOffice.barangay, 'Barangay Office', Icons.home_work_rounded),
+                              const SizedBox(width: 12),
+                              _buildOfficeTab(IssuingOffice.municipal, 'Municipal Hall', Icons.location_city_rounded),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          _buildStepTitle('2. Document Type'),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedType,
                             decoration: InputDecoration(
-                              hintText: 'Select Certificate',
+                              hintText: _selectedOffice == null ? 'Select Office First' : 'Select Document',
                               prefixIcon: const Icon(Icons.description_outlined),
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.92),
+                              fillColor: Colors.white.withValues(alpha: 0.92),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            items: _docTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                            items: _selectedOffice == null 
+                              ? [] 
+                              : _categorizedDocs[_selectedOffice!]!.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
                             onChanged: (v) => setState(() => _selectedType = v!),
-                            validator: (v) => v == null ? 'Please select a certificate' : null,
+                            validator: (v) => v == null ? 'Please select a document' : null,
                           ),
                           const SizedBox(height: 24),
-                          _buildStepTitle('2. State Your Purpose'),
+                          _buildStepTitle('3. Purpose'),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _purposeController,
                             decoration: InputDecoration(
                               hintText: 'e.g. For employment, ID application, etc.',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.92),
+                              fillColor: Colors.white.withValues(alpha: 0.92),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -172,7 +286,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                             validator: (v) => v!.isEmpty ? 'Please specify your purpose' : null,
                           ),
                           const SizedBox(height: 24),
-                          _buildStepTitle('3. Supporting Evidence'),
+                          _buildStepTitle('4. Supporting Evidence'),
                           const SizedBox(height: 12),
                           _buildFileUploadButton(),
                           const SizedBox(height: 48),
@@ -184,12 +298,14 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                               minimumSize: const Size(double.infinity, 60),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               elevation: 4,
-                              shadowColor: const Color(0xFF0D47A1).withOpacity(0.4),
+                              shadowColor: const Color(0xFF0D47A1).withValues(alpha: 0.4),
                             ),
                             child: context.watch<DocumentProvider>().isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text('Review & Submit Application',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                : Text(
+                                    isVerified ? 'Review & Submit Application' : 'Submit (Requires Verification)',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
                           ),
                         ],
                       ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
@@ -213,7 +329,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.35),
+            Colors.black.withValues(alpha: 0.35),
             Colors.transparent,
           ],
         ),
@@ -228,7 +344,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
           ).animate().fadeIn().slideX(),
           Text(
             'Please fill out all fields carefully for faster processing.',
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
           ),
         ],
       ),
@@ -254,9 +370,9 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
       child: Container(
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.92),
+          color: Colors.white.withValues(alpha: 0.92),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
         ),
         child: _attachedFile == null
             ? Column(
@@ -280,6 +396,51 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                       icon: const Icon(Icons.close, size: 18)),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildOfficeTab(IssuingOffice office, String label, IconData icon) {
+    bool isSelected = _selectedOffice == office;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() {
+          _selectedOffice = office;
+          _selectedType = null;
+        }),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF0D47A1) : Colors.white.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ] : [],
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey[600],
+                size: 28,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[800],
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

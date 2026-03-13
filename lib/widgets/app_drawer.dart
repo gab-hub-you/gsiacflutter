@@ -7,6 +7,8 @@ import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../screens/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../screens/citizen_validation_screen.dart';
+import '../models/citizen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -28,6 +30,8 @@ class AppDrawer extends StatelessWidget {
           _buildItem(context, Icons.note_add_rounded, 'Request Documents', const RequestDocumentScreen(), false),
           _buildItem(context, Icons.list_alt_rounded, 'Tracking History', const MyRequestsScreen(), false),
           _buildItem(context, Icons.account_circle_rounded, 'Personal Profile', const ProfileScreen(), false),
+          if (user?.verificationStatus == VerificationStatus.unverified)
+            _buildItem(context, Icons.verified_user_rounded, 'Verify Account', const CitizenValidationScreen(), false),
           const Spacer(),
           _buildLogout(context),
           const SizedBox(height: 20),
@@ -46,14 +50,19 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 35,
             backgroundColor: Colors.white,
-            child: Icon(Icons.person, color: Color(0xFF0D47A1), size: 40),
+            backgroundImage: user?.profilePictureUrl != null
+                ? NetworkImage(user!.profilePictureUrl!)
+                : null,
+            child: user?.profilePictureUrl == null
+                ? const Icon(Icons.person, color: Color(0xFF0D47A1), size: 40)
+                : null,
           ),
           const SizedBox(height: 16),
           Text(
-            user?.fullName ?? 'Citizen User',
+            user?.displayName ?? 'Citizen User',
             style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Text(

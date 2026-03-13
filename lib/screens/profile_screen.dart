@@ -3,9 +3,53 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
+import '../models/citizen.dart';
+import 'citizen_validation_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+import 'package:file_picker/file_picker.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isUploading = false;
+
+  Future<void> _pickAndUploadImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    if (file.bytes == null) return;
+
+    setState(() => _isUploading = true);
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final url = await authProvider.uploadProfilePicture(
+      file.bytes!,
+      file.name,
+    );
+
+    setState(() => _isUploading = false);
+
+    if (url != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile picture updated!')),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(authProvider.errorMessage ?? 'Upload failed')),
+      );
+    }
+  }
 
   void _showCorrectionDialog(BuildContext context) {
     showDialog(
@@ -126,23 +170,44 @@ class ProfileScreen extends StatelessWidget {
                           'RESIDENCE & STATUS',
                           Icons.home_work_rounded,
                           [
-                            _buildInfoRow('Primary Address', user?.address ?? '123 Mabini St, Manila'),
-                            _buildInfoRow('Portal Status', 'Verified Citizen', isStatus: true),
+                            _buildInfoRow('Primary Address', user?.address ?? 'Not set'),
+                            _buildInfoRow(
+                              'Portal Status', 
+                              user?.verificationStatus.name.toUpperCase() ?? 'UNVERIFIED', 
+                              isStatus: true,
+                              statusColor: user?.verificationStatus == VerificationStatus.verified ? Colors.green[700] : Colors.orange[700],
+                            ),
                           ],
                         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                        const SizedBox(height: 32),
-                        ElevatedButton.icon(
-                          onPressed: () => _showCorrectionDialog(context),
-                          icon: const Icon(Icons.edit_document),
-                          label: const Text('Request Information Correction'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 60),
-                            backgroundColor: Colors.white.withOpacity(0.92),
-                            foregroundColor: Colors.orange[900],
-                            side: BorderSide(color: Colors.orange[200]!),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                        ).animate().fadeIn(delay: 300.ms).scale(),
+                        const SizedBox(height: 16),
+                        if (user?.verificationStatus == VerificationStatus.unverified)
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (ctx) => const CitizenValidationScreen()),
+                            ),
+                            icon: const Icon(Icons.verified_user_rounded),
+                            label: const Text('Verify My Identity Now'),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 60),
+                              backgroundColor: const Color(0xFF0D47A1),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ).animate().fadeIn(delay: 250.ms).scale()
+                        else
+                          ElevatedButton.icon(
+                            onPressed: () => _showCorrectionDialog(context),
+                            icon: const Icon(Icons.edit_document),
+                            label: const Text('Request Information Correction'),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 60),
+                              backgroundColor: Colors.white.withOpacity(0.92),
+                              foregroundColor: Colors.orange[900],
+                              side: BorderSide(color: Colors.orange[200]!),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ).animate().fadeIn(delay: 300.ms).scale(),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -176,18 +241,45 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 110, 24, 40),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(color: Colors.white30, shape: BoxShape.circle),
-            child: const CircleAvatar(
-              radius: 54,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person_rounded, size: 60, color: Color(0xFF0D47A1)),
-            ),
-          ).animate().scale(duration: 500.ms, curve: Curves.bounceOut),
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(color: Colors.white30, shape: BoxShape.circle),
+                child: CircleAvatar(
+                  radius: 54,
+                  backgroundColor: Colors.white,
+                  backgroundImage: user?.profilePictureUrl != null
+                      ? NetworkImage(user!.profilePictureUrl!)
+                      : null,
+                  child: user?.profilePictureUrl == null
+                      ? const Icon(Icons.person_rounded, size: 60, color: Color(0xFF0D47A1))
+                      : null,
+                ),
+              ).animate().scale(duration: 500.ms, curve: Curves.bounceOut),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _isUploading ? null : _pickAndUploadImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF0D47A1),
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                    ),
+                    child: _isUploading 
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Text(
-            user?.fullName ?? 'Juan Dela Cruz',
+            user?.displayName ?? 'Juan Dela Cruz',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -232,7 +324,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool isStatus = false}) {
+  Widget _buildInfoRow(String label, String value, {bool isStatus = false, Color? statusColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
@@ -243,7 +335,7 @@ class ProfileScreen extends StatelessWidget {
             value,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isStatus ? Colors.green[700] : Colors.black87,
+              color: isStatus ? (statusColor ?? Colors.green[700]) : Colors.black87,
             ),
           ),
         ],

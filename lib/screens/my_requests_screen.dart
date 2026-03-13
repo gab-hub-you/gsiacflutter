@@ -28,7 +28,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.15),
+        backgroundColor: Colors.white.withValues(alpha: 0.15),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -56,8 +56,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.45),
-                    Colors.black.withOpacity(0.25),
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
                   ],
                 ),
               ),
@@ -86,10 +86,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: Colors.white.withOpacity(0.92),
+      color: Colors.white.withValues(alpha: 0.92),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -129,7 +129,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 children: [
                   _buildStatusBadge(req.status),
                   const SizedBox(height: 8),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+                  Text(
+                    req.currentOffice == IssuingOffice.barangay ? 'AT BARANGAY' : 'AT MUNICIPAL',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 8, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ],
@@ -156,7 +159,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Icon(icon, color: color, size: 28),
@@ -164,37 +167,38 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   }
 
   Widget _buildStatusBadge(RequestStatus status) {
-    Color color;
-    String text;
-    switch (status) {
-      case RequestStatus.pending:
-        color = Colors.amber[700]!;
-        text = 'Pending';
-        break;
-      case RequestStatus.underReview:
-        color = const Color(0xFF0288D1);
-        text = 'Reviewing';
-        break;
-      case RequestStatus.approved:
-        color = const Color(0xFF43A047);
-        text = 'Ready';
-        break;
-      case RequestStatus.rejected:
-        color = Colors.redAccent;
-        text = 'Declined';
-        break;
-    }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: _getStatusColor(status).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        text.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+        _getStatusText(status).toUpperCase(),
+        style: TextStyle(color: _getStatusColor(status), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
       ),
     );
+  }
+
+  Color _getStatusColor(RequestStatus status) {
+    switch (status) {
+      case RequestStatus.pending: return Colors.orange;
+      case RequestStatus.verifiedByBarangay: return Colors.blue;
+      case RequestStatus.sentToMunicipal: return Colors.indigo;
+      case RequestStatus.processing: return Colors.amber[800]!;
+      case RequestStatus.completed: return Colors.green;
+      case RequestStatus.rejected: return Colors.red;
+    }
+  }
+
+  String _getStatusText(RequestStatus status) {
+    switch (status) {
+      case RequestStatus.pending: return 'Pending';
+      case RequestStatus.verifiedByBarangay: return 'Barangay Verified';
+      case RequestStatus.sentToMunicipal: return 'Forwarded';
+      case RequestStatus.processing: return 'Processing';
+      case RequestStatus.completed: return 'Issued';
+      case RequestStatus.rejected: return 'Rejected';
+    }
   }
 }

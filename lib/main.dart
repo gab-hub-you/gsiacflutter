@@ -6,6 +6,7 @@ import 'app.dart';
 import 'providers/auth_provider.dart';
 import 'providers/document_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/beneficiary_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => BeneficiaryProvider()),
       ],
       child: const ULGDSPApp(),
     ),

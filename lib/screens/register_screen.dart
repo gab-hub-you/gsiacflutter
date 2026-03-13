@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
@@ -14,41 +13,26 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  DateTime? _selectedDate;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  void _presentDatePicker() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0D47A1),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF1A237E),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (pickedDate != null) {
-      setState(() => _selectedDate = pickedDate);
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _usernameController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 
   void _handleRegister() async {
-    if (_formKey.currentState!.validate() && _selectedDate != null) {
+    if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -62,27 +46,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.register(
-        fullName: _nameController.text,
-        address: _addressController.text,
-        birthdate: _selectedDate!,
         email: _emailController.text,
+        username: _usernameController.text,
         password: _passwordController.text,
+        phoneNumber: _phoneController.text,
       );
 
       if (success && mounted) {
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Text('Account Recorded'),
+            title: const Text('Account Created'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Registration successful!'),
+                const Text('Basic account creation successful!'),
                 const SizedBox(height: 16),
                 const Text(
-                  'IMPORTANT: Please check your email inbox (and spam folder) for a confirmation link. You must click the link to activate your account before you can log in.',
+                  'To access all services, you need to validate your citizen status. Please check your email for confirmation before proceeding.',
                   style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
                 ),
               ],
@@ -91,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Go back to login
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0D47A1),
@@ -113,13 +97,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
       }
-    } else if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please verify your birthdate selection'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
@@ -200,7 +177,7 @@ Positioned.fill(
                                 ),
                               ],
                             ),
-                          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                          ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
                           
                           Text(
                             'Secure your digital identity',
@@ -209,41 +186,39 @@ Positioned.fill(
                               color: Colors.white.withOpacity(0.8),
                               letterSpacing: 1.5,
                             ),
-                          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
+                          ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
                           
                           const SizedBox(height: 32),
 
                           _buildTextField(
-                            controller: _nameController,
-                            label: 'Full Legal Name',
-                            icon: Icons.person_outline_rounded,
-                          ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.1),
-                          
-                          const SizedBox(height: 16),
-                          
-                          _buildTextField(
-                            controller: _addressController,
-                            label: 'Residential Address',
-                            icon: Icons.home_outlined,
-                          ).animate().fadeIn(delay: 500.ms).slideX(begin: -0.1),
-                          
-                          const SizedBox(height: 16),
-
-                          _buildDatePickerField().animate().fadeIn(delay: 600.ms).slideX(begin: -0.1),
-
-                          const SizedBox(height: 16),
-                          
-                          _buildTextField(
                             controller: _emailController,
-                            label: 'Register Email',
+                            label: 'Email Address',
                             icon: Icons.alternate_email_rounded,
-                          ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.1),
+                            keyboardType: TextInputType.emailAddress,
+                          ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.05),
+                          
+                          const SizedBox(height: 16),
+
+                          _buildTextField(
+                            controller: _usernameController,
+                            label: 'Username',
+                            icon: Icons.person_rounded,
+                          ).animate().fadeIn(delay: 250.ms).slideX(begin: -0.05),
+                          
+                          const SizedBox(height: 16),
+                          
+                          _buildTextField(
+                            controller: _phoneController,
+                            label: 'Phone Number',
+                            icon: Icons.phone_android_rounded,
+                            keyboardType: TextInputType.phone,
+                          ).animate().fadeIn(delay: 300.ms).slideX(begin: -0.05),
                           
                           const SizedBox(height: 16),
                           
                           _buildTextField(
                             controller: _passwordController,
-                            label: 'Secure Password',
+                            label: 'Password',
                             icon: Icons.lock_outline_rounded,
                             isPassword: _obscurePassword,
                             suffixIcon: IconButton(
@@ -253,7 +228,7 @@ Positioned.fill(
                               ),
                               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
-                          ).animate().fadeIn(delay: 800.ms).slideX(begin: -0.1),
+                          ).animate().fadeIn(delay: 350.ms).slideX(begin: -0.05),
 
                           const SizedBox(height: 16),
 
@@ -274,7 +249,7 @@ Positioned.fill(
                               if (value != _passwordController.text) return 'Passwords do not match';
                               return null;
                             },
-                          ).animate().fadeIn(delay: 900.ms).slideX(begin: -0.1),
+                          ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.05),
                           
                           const SizedBox(height: 32),
 
@@ -294,14 +269,14 @@ Positioned.fill(
                               child: context.watch<AuthProvider>().isLoading
                                   ? const CircularProgressIndicator(color: Color(0xFF0D47A1))
                                   : const Text(
-                                      'Complete Registration',
+                                      'Create Account',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                             ),
-                          ).animate().fadeIn(delay: 1000.ms).scale(),
+                          ).animate().fadeIn(delay: 450.ms).scale(),
                           
                           const SizedBox(height: 24),
 
@@ -324,7 +299,7 @@ Positioned.fill(
                                 ),
                               ),
                             ],
-                          ).animate().fadeIn(delay: 1100.ms),
+                          ).animate().fadeIn(delay: 500.ms),
                         ],
                       ),
                     ),
@@ -354,11 +329,13 @@ Positioned.fill(
     required IconData icon,
     bool isPassword = false,
     Widget? suffixIcon,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
+      keyboardType: keyboardType,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
@@ -378,34 +355,6 @@ Positioned.fill(
         errorStyle: const TextStyle(color: Colors.orangeAccent),
       ),
       validator: validator ?? (value) => value == null || value.isEmpty ? 'Required field' : null,
-    );
-  }
-
-  Widget _buildDatePickerField() {
-    return InkWell(
-      onTap: _presentDatePicker,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today_rounded, color: Colors.white70),
-            const SizedBox(width: 12),
-            Text(
-              _selectedDate == null
-                  ? 'Select Date of Birth'
-                  : DateFormat('MMMM dd, yyyy').format(_selectedDate!),
-              style: TextStyle(
-                color: _selectedDate == null ? Colors.white.withOpacity(0.7) : Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
