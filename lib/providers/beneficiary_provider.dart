@@ -128,4 +128,34 @@ class BeneficiaryProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Automation Integration: Death Record Event
+  // Simulates an event trigger when a citizen is marked as deceased
+  Future<void> processDeathRecordEvent(String citizenId) async {
+    bool hasUpdates = false;
+    for (int i = 0; i < _applications.length; i++) {
+      if (_applications[i].citizenId == citizenId && _applications[i].status == ApplicationStatus.approved) {
+        final app = _applications[i];
+        _applications[i] = BeneficiaryApplication(
+          id: app.id,
+          citizenId: app.citizenId,
+          programId: app.programId,
+          programName: app.programName,
+          status: ApplicationStatus.suspended,
+          trackingId: app.trackingId,
+          dateSubmitted: app.dateSubmitted,
+          supportingDocs: app.supportingDocs,
+          remarks: 'AUTOMATED SYSTEM ACTION: Benefits suspended due to verified death record.',
+          qrCode: app.qrCode, // Keep QR code but it shouldn't be valid, or nullify it
+          approvalDate: app.approvalDate,
+        );
+        hasUpdates = true;
+      }
+    }
+    
+    if (hasUpdates) {
+      notifyListeners();
+      // Normally, notify the Social Welfare Department here via another API
+    }
+  }
 }

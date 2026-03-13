@@ -8,6 +8,8 @@ import 'request_document_screen.dart';
 import 'my_requests_screen.dart';
 import 'profile_screen.dart';
 import 'notification_screen.dart';
+import 'apply_beneficiary_screen.dart';
+import 'my_beneficiary_applications_screen.dart';
 import '../providers/notification_provider.dart';
 import '../models/citizen.dart';
 
@@ -350,7 +352,7 @@ class DashboardScreen extends StatelessWidget {
           sub: 'Social Benefits',
           bg: const Color(0xFFF1F8E9), 
           iconColor: const Color(0xFF43A047), 
-          target: null, // To be implemented: ApplyBeneficiaryScreen()
+          target: const ApplyBeneficiaryScreen(),
           delay: 300,
         ),
         _buildServiceTile(
@@ -360,7 +362,7 @@ class DashboardScreen extends StatelessWidget {
           sub: 'Benefit Tracking',
           bg: const Color(0xFFE0F7FA), 
           iconColor: const Color(0xFF00ACC1), 
-          target: null, // To be implemented: MyBeneficiaryApplicationsScreen()
+          target: const MyBeneficiaryApplicationsScreen(),
           delay: 400,
         ),
       ],
@@ -533,7 +535,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             const Divider(height: 32),
             ElevatedButton(
-              onPressed: () {}, // To be implemented: Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyBeneficiaryApplicationsScreen())),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyBeneficiaryApplicationsScreen())),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
