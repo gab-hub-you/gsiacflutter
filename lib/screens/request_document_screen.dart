@@ -100,47 +100,61 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      final provider = Provider.of<DocumentProvider>(context, listen: false);
-      final trk = await provider.submitRequest(
-        type: _selectedType!,
-        purpose: _purposeController.text,
-        office: _selectedOffice!,
-        attachmentPath: _attachedFile?.path,
-      );
+      try {
+        final provider = Provider.of<DocumentProvider>(context, listen: false);
+        final trk = await provider.submitRequest(
+          citizenId: user?.id ?? '',
+          type: _selectedType!,
+          purpose: _purposeController.text,
+          office: _selectedOffice!,
+          attachmentPath: _attachedFile?.path,
+          attachmentBytes: _attachedFile?.bytes,
+          attachmentFileName: _attachedFile?.name,
+        );
 
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Text('Success'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 64),
-                const SizedBox(height: 16),
-                const Text('Application Submitted', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                const SizedBox(height: 8),
-                Text('Your tracking number is $trk', textAlign: TextAlign.center),
-                const SizedBox(height: 8),
-                const Text(
-                  'Note: Municipal requests are first validated by the Barangay.',
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
-                  textAlign: TextAlign.center,
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Text('Success'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 64),
+                  const SizedBox(height: 16),
+                  const Text('Application Submitted', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 8),
+                  Text('Your tracking number is $trk', textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Note: Municipal requests are first validated by the Barangay.',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Back to Dashboard'),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.pop(context);
-                },
-                child: const Text('Back to Dashboard'),
-              ),
-            ],
-          ),
-        );
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Submission failed: ${e.toString()}'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     }
   }
@@ -241,7 +255,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           _buildStepTitle('2. Document Type'),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            value: _selectedType,
+                            initialValue: _selectedType,
                             decoration: InputDecoration(
                               hintText: _selectedOffice == null ? 'Select Office First' : 'Select Document',
                               prefixIcon: const Icon(Icons.description_outlined),
@@ -281,7 +295,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           _buildFileUploadButton(),
                           const SizedBox(height: 48),
                           ElevatedButton(
-                            onPressed: context.watch<DocumentProvider>().isLoading ? null : _submit,
+                            onPressed: context.watch<DocumentProvider>().isSubmitting ? null : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0D47A1),
                               foregroundColor: Colors.white,
@@ -290,7 +304,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                               elevation: 4,
                               shadowColor: const Color(0xFF0D47A1).withValues(alpha: 0.4),
                             ),
-                            child: context.watch<DocumentProvider>().isLoading
+                            child: context.watch<DocumentProvider>().isSubmitting
                                 ? const CircularProgressIndicator(color: Colors.white)
                                 : Text(
                                     isVerified ? 'Review & Submit Application' : 'Submit (Requires Verification)',

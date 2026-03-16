@@ -4,12 +4,31 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../providers/notification_provider.dart';
 import '../models/notification.dart';
+import '../providers/auth_provider.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        context.read<NotificationProvider>().fetchNotifications(user.id);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
     final notificationProvider = context.watch<NotificationProvider>();
     final notifications = notificationProvider.notifications;
 
@@ -25,9 +44,9 @@ class NotificationScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          if (notifications.isNotEmpty)
+          if (notifications.isNotEmpty && user != null)
             TextButton(
-              onPressed: () => notificationProvider.markAllAsRead(),
+              onPressed: () => notificationProvider.markAllAsRead(user.id),
               child: const Text('Mark all as read', style: TextStyle(color: Colors.white)),
             ),
         ],
@@ -51,8 +70,8 @@ class NotificationScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.45),
-                    Colors.black.withOpacity(0.25),
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
                   ],
                 ),
               ),
@@ -60,28 +79,44 @@ class NotificationScreen extends StatelessWidget {
           ),
 
           // Content
-          notifications.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.notifications_none_rounded, size: 80, color: Colors.white54),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No notifications yet',
-                        style: TextStyle(color: Colors.white70, fontSize: 18),
+          RefreshIndicator(
+            onRefresh: () async {
+              if (user != null) {
+                await notificationProvider.fetchNotifications(user.id);
+              }
+            },
+            child: notificationProvider.isLoading && notifications.isEmpty
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : notifications.isEmpty
+                    ? ListView( // Use ListView for RefreshIndicator to work on empty state
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.notifications_none_rounded, size: 80, color: Colors.white54),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'No notifications yet',
+                                  style: TextStyle(color: Colors.white70, fontSize: 18),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
+                        itemCount: notifications.length,
+                        itemBuilder: (ctx, index) {
+                          final notification = notifications[index];
+                          return _buildNotificationCard(context, notificationProvider, notification, index);
+                        },
                       ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
-                  itemCount: notifications.length,
-                  itemBuilder: (ctx, index) {
-                    final notification = notifications[index];
-                    return _buildNotificationCard(context, notificationProvider, notification, index);
-                  },
-                ),
+          ),
         ],
       ),
     );
@@ -131,7 +166,7 @@ class NotificationScreen extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.92),
+          color: Colors.white.withValues(alpha: 0.92),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -177,7 +212,7 @@ class NotificationScreen extends StatelessWidget {
                             Text(
                               notification.title,
                               style: TextStyle(
-                                fontWeight: notification.isRead ? FontWeight.bold : FontWeight.w900,
+                                fontWeight: notification.isRead ? FontWeight.normal : FontWeight.w900,
                                 fontSize: 16,
                                 color: const Color(0xFF1A237E),
                               ),

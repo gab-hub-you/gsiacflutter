@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/document_request.dart';
 import '../providers/document_provider.dart';
+import '../providers/auth_provider.dart';
 import 'request_details_screen.dart';
 
 class MyRequestsScreen extends StatefulWidget {
@@ -17,7 +18,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<DocumentProvider>().fetchRequests());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        context.read<DocumentProvider>().fetchRequests(user.id);
+      }
+    });
   }
 
   @override
@@ -36,48 +42,57 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'lib/assets/image/bg.webp',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final user = context.read<AuthProvider>().user;
+          if (user != null) {
+            await provider.fetchRequests(user.id);
+          }
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background Image
+            Positioned.fill(
+              child: Image.asset(
+                'lib/assets/image/bg.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
             ),
-          ),
-
-          // Dark overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.45),
-                    Colors.black.withValues(alpha: 0.25),
-                  ],
+  
+            // Dark overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.45),
+                      Colors.black.withValues(alpha: 0.25),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-
-          // Content
-          Positioned.fill(
-            child: provider.isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
-                    itemCount: provider.requests.length,
-                    itemBuilder: (context, index) {
-                      final req = provider.requests[index];
-                      return _buildRequestCard(req, index);
-                    },
-                  ),
-          ),
-        ],
+  
+            // Content
+            Positioned.fill(
+              child: provider.isLoading && provider.requests.isEmpty
+                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
+                      itemCount: provider.requests.length,
+                      itemBuilder: (context, index) {
+                        final req = provider.requests[index];
+                        return _buildRequestCard(req, index);
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

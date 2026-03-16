@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/app_drawer.dart';
 import '../providers/auth_provider.dart';
+import '../providers/document_provider.dart'; // Moved up
 import 'request_document_screen.dart';
 import 'my_requests_screen.dart';
 import 'profile_screen.dart';
@@ -11,10 +12,35 @@ import 'notification_screen.dart';
 import 'apply_beneficiary_screen.dart';
 import 'my_beneficiary_applications_screen.dart';
 import '../providers/notification_provider.dart';
+import '../providers/beneficiary_provider.dart';
 import '../models/citizen.dart';
+import '../models/beneficiary_application.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchInitialData();
+    });
+  }
+
+  void _fetchInitialData() {
+    final auth = context.read<AuthProvider>();
+    final user = auth.user;
+    if (user != null) {
+      context.read<BeneficiaryProvider>().fetchApplications(user.id);
+      context.read<DocumentProvider>().fetchRequests(user.id);
+      context.read<NotificationProvider>().fetchNotifications(user.id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +48,11 @@ class DashboardScreen extends StatelessWidget {
     final user = auth.user;
     final isVerified = user?.verificationStatus == VerificationStatus.verified;
     final isPending = user?.verificationStatus == VerificationStatus.pending;
+
+    // Refresh triggers
+    if (user != null && context.read<BeneficiaryProvider>().applications.isEmpty && !context.read<BeneficiaryProvider>().isLoading) {
+       _fetchInitialData();
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -40,71 +71,91 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'lib/assets/image/bg.webp',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.45),
-                    Colors.black.withOpacity(0.25),
-                  ],
-                ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<AuthProvider>().refreshProfile();
+          _fetchInitialData();
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'lib/assets/image/bg.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
               ),
             ),
-          ),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildWelcomeHeader(context, user),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Quick Services',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
-                        ),
-                      ).animate().fadeIn().slideX(),
-                      const SizedBox(height: 16),
-                      _buildServiceGrid(context, isVerified),
-                      const SizedBox(height: 32),
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Social Beneficiary Status',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
-                        ),
-                      ).animate().fadeIn(delay: 500.ms).slideX(),
-                      const SizedBox(height: 16),
-                      _buildBeneficiaryStatusCard(context),
-                      const SizedBox(height: 32),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.45),
+                      Colors.black.withValues(alpha: 0.25),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          if (isPending) _buildPendingOverlay(),
-        ],
+            SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  _buildWelcomeHeader(context, user),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Quick Services',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
+                          ),
+                        ).animate().fadeIn().slideX(),
+                        const SizedBox(height: 16),
+                        _buildServiceGrid(context, isVerified),
+                        const SizedBox(height: 32),
+                        
+                        const Text(
+                          'Recent Activity',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
+                          ),
+                        ).animate().fadeIn(delay: 400.ms).slideX(),
+                        const SizedBox(height: 16),
+                        _buildRecentStatusCard(context),
+                        
+                        const SizedBox(height: 32),
+                        const Text(
+                          'Social Beneficiary Status',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
+                          ),
+                        ).animate().fadeIn(delay: 500.ms).slideX(),
+                        const SizedBox(height: 16),
+                        _buildBeneficiaryStatusCard(context),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isPending) _buildPendingOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -117,7 +168,7 @@ class DashboardScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.orangeAccent.withOpacity(0.9),
+          color: Colors.orangeAccent.withValues(alpha: 0.9),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
@@ -170,7 +221,7 @@ class DashboardScreen extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.4),
+            Colors.black.withValues(alpha: 0.4),
             Colors.transparent,
           ],
         ),
@@ -197,15 +248,15 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'Welcome back,',
-                style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 16),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 16),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withOpacity(0.5)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   statusMsg,
@@ -229,9 +280,9 @@ class DashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.25)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: Row(
                 children: [
@@ -250,9 +301,9 @@ class DashboardScreen extends StatelessWidget {
              Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.15),
+                color: Colors.orange.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.orange.withOpacity(0.25)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
               ),
               child: Column(
                 children: [
@@ -265,7 +316,7 @@ class DashboardScreen extends StatelessWidget {
                           status == VerificationStatus.pending 
                             ? 'Verification in progress. Please wait for staff approval.'
                             : 'Please complete your profile validation to access document requests.',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
                         ),
                       ),
                     ],
@@ -372,10 +423,10 @@ class DashboardScreen extends StatelessWidget {
   }) {
     return Card(
       elevation: 0,
-      color: enabled ? Colors.white.withOpacity(0.92) : Colors.white.withOpacity(0.5),
+      color: enabled ? Colors.white.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -424,12 +475,29 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildRecentStatusCard(BuildContext context) {
+    final docProvider = context.watch<DocumentProvider>();
+    final requests = docProvider.requests;
+    
+    if (requests.isEmpty) {
+      return Card(
+        elevation: 0,
+        color: Colors.white.withValues(alpha: 0.92),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Center(child: Text('No recent document requests.', style: TextStyle(color: Colors.grey))),
+        ),
+      );
+    }
+
+    final latest = requests.first;
+
     return Card(
       elevation: 0,
-      color: Colors.white.withOpacity(0.92),
+      color: Colors.white.withValues(alpha: 0.92),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -437,36 +505,36 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: Color(0xFFE1F5FE),
-                  child: Icon(Icons.access_time_filled, color: Color(0xFF0288D1)),
+                CircleAvatar(
+                  backgroundColor: latest.statusColor.withValues(alpha: 0.1),
+                  child: Icon(Icons.description_rounded, color: latest.statusColor),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Barangay Clearance',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('TRK-100201',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(latest.type, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(latest.trackingNumber, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                     ],
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration:
-                      BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12)),
-                  child: const Text('Under Review',
-                      style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 10)),
+                  decoration: BoxDecoration(
+                    color: latest.statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    latest.statusText,
+                    style: TextStyle(color: latest.statusColor, fontWeight: FontWeight.bold, fontSize: 10),
+                  ),
                 ),
               ],
             ),
             const Divider(height: 32),
             ElevatedButton(
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (ctx) => const MyRequestsScreen())),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyRequestsScreen())),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -483,7 +551,23 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildBeneficiaryStatusCard(BuildContext context) {
-    // This could pull from BeneficiaryProvider later
+    final benProvider = context.watch<BeneficiaryProvider>();
+    final applications = benProvider.applications;
+
+    if (applications.isEmpty) {
+      return Card(
+        elevation: 0,
+        color: Colors.white.withValues(alpha: 0.92),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Center(child: Text('No active benefit applications.', style: TextStyle(color: Colors.grey))),
+        ),
+      );
+    }
+
+    final latest = applications.first;
+
     return Card(
       elevation: 0,
       color: Colors.white.withValues(alpha: 0.92),
@@ -497,29 +581,44 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: Color(0xFFE8F5E9),
-                  child: Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D32)),
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFE8F5E9),
+                  child: Icon(
+                    latest.status == ApplicationStatus.approved ? Icons.check_circle_rounded : Icons.pending_rounded,
+                    color: latest.status == ApplicationStatus.approved ? const Color(0xFF2E7D32) : Colors.orange,
+                  ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Senior Citizen Pension',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Active Beneficiary',
-                          style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(latest.programName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        latest.status == ApplicationStatus.approved ? 'Approved Beneficiary' : 'Application in Progress',
+                        style: TextStyle(
+                          color: latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration:
-                      BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(12)),
-                  child: const Text('DISBURSED',
-                      style: TextStyle(
-                          color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
+                  decoration: BoxDecoration(
+                    color: (latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    latest.status.name.toUpperCase(),
+                    style: TextStyle(
+                      color: latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange,
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
               ],
             ),

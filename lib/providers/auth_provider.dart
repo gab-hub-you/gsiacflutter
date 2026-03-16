@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/citizen.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -21,44 +20,57 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _init() {
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
       final Session? session = data.session;
       _token = session?.accessToken;
       if (session?.user != null) {
-        final metadata = session!.user.userMetadata ?? {};
-        _user = Citizen(
-          id: session.user.id,
-          username: metadata['username'] ?? '',
-          profilePictureUrl: metadata['profilePictureUrl'] ?? metadata['profile_picture_url'],
-          firstName: metadata['firstName'] ?? metadata['first_name'] ?? '',
-          lastName: metadata['lastName'] ?? metadata['last_name'] ?? '',
-          middleName: metadata['middleName'] ?? metadata['middle_name'],
-          suffix: metadata['suffix'],
-          sex: metadata['sex'],
-          status: metadata['status'],
-          address: metadata['address'] ?? '',
-          birthdate: DateTime.tryParse(metadata['birthdate'] ?? '') ?? DateTime.now(),
-          email: session.user.email ?? '',
-          phoneNumber: metadata['phoneNumber'] ?? metadata['phone_number'],
-          town: metadata['town'],
-          barangay: metadata['barangay'],
-          govIdUrl: metadata['govIdUrl'] ?? metadata['gov_id_url'],
-          selfieUrl: metadata['selfieUrl'] ?? metadata['selfie_url'],
-          verificationStatus: VerificationStatus.values.firstWhere(
-            (e) => e.name == (metadata['verificationStatus'] ?? metadata['verification_status']),
-            orElse: () => VerificationStatus.unverified,
-          ),
-          lifeStatus: metadata['lifeStatus'] ?? metadata['life_status'] ?? 'Active',
-          role: UserRole.values.firstWhere(
-            (e) => e.name == (metadata['role'] ?? 'citizen'),
-            orElse: () => UserRole.citizen,
-          ),
-        );
+        await fetchProfile(session!.user.id);
       } else {
         _user = null;
+        notifyListeners();
       }
-      notifyListeners();
     });
+  }
+
+  Future<void> fetchProfile(String userId) async {
+    try {
+      final data = await Supabase.instance.client
+          .from('citizens')
+          .select()
+          .eq('id', userId)
+          .single();
+      
+      _user = Citizen.fromJson(data);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error fetching profile: $e");
+      // Fallback to minimal data from auth metadata if DB fetch fails
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final metadata = user.userMetadata ?? {};
+        _user = Citizen(
+          id: user.id,
+          username: metadata['username'] ?? '',
+          firstName: metadata['firstName'] ?? '',
+          lastName: metadata['lastName'] ?? '',
+          address: metadata['address'] ?? '',
+          birthdate: DateTime.tryParse(metadata['birthdate'] ?? '') ?? DateTime.now(),
+          email: user.email ?? '',
+          verificationStatus: VerificationStatus.values.firstWhere(
+            (e) => e.name == (metadata['verificationStatus'] ?? 'unverified'),
+            orElse: () => VerificationStatus.unverified,
+          ),
+        );
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> refreshProfile() async {
+    final curUser = Supabase.instance.client.auth.currentUser;
+    if (curUser != null) {
+      await fetchProfile(curUser.id);
+    }
   }
 
   Future<bool> login(String email, String password) async {
@@ -314,14 +326,23 @@ class AuthProvider extends ChangeNotifier {
       // Map dynamic keys to database snake_case keys if necessary
       final Map<String, dynamic> dbData = {};
       data.forEach((key, value) {
-        if (key == 'profilePictureUrl') dbData['profile_picture_url'] = value;
-        else if (key == 'firstName') dbData['first_name'] = value;
-        else if (key == 'lastName') dbData['last_name'] = value;
-        else if (key == 'middleName') dbData['middle_name'] = value;
-        else if (key == 'verificationStatus') dbData['verification_status'] = value;
-        else if (key == 'govIdUrl') dbData['gov_id_url'] = value;
-        else if (key == 'selfieUrl') dbData['selfie_url'] = value;
-        else dbData[key] = value;
+        if (key == 'profilePictureUrl') {
+          dbData['profile_picture_url'] = value;
+        } else if (key == 'firstName') {
+          dbData['first_name'] = value;
+        } else if (key == 'lastName') {
+          dbData['last_name'] = value;
+        } else if (key == 'middleName') {
+          dbData['middle_name'] = value;
+        } else if (key == 'verificationStatus') {
+          dbData['verification_status'] = value;
+        } else if (key == 'govIdUrl') {
+          dbData['gov_id_url'] = value;
+        } else if (key == 'selfieUrl') {
+          dbData['selfie_url'] = value;
+        } else {
+          dbData[key] = value;
+        }
       });
 
       if (dbData.isNotEmpty) {

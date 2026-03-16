@@ -24,6 +24,9 @@ class _StaffBeneficiaryDashboardScreenState extends State<StaffBeneficiaryDashbo
     if (user?.role == UserRole.municipalStaff) {
       _filterStatus = ApplicationStatus.pendingMunicipal;
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BeneficiaryProvider>().fetchAllApplications();
+    });
   }
 
   void _showProcessDialog(BuildContext context, BeneficiaryApplication app, UserRole role) {
@@ -63,9 +66,10 @@ class _StaffBeneficiaryDashboardScreenState extends State<StaffBeneficiaryDashbo
                 ApplicationStatus.rejected,
                 remarks: remarks,
               );
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application Rejected')));
-              }
+              // Notification for staff dashboard: re-fetch all
+              await provider.fetchAllApplications();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application Rejected')));
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
             child: const Text('Reject'),
@@ -87,11 +91,12 @@ class _StaffBeneficiaryDashboardScreenState extends State<StaffBeneficiaryDashbo
                 nextStatus,
                 remarks: remarks,
               );
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(role == UserRole.barangayStaff ? 'Forwarded to Municipal' : 'Application Approved'))
-                );
-              }
+              // Notification for staff dashboard: re-fetch all
+              await provider.fetchAllApplications();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(role == UserRole.barangayStaff ? 'Forwarded to Municipal' : 'Application Approved'))
+              );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
             child: Text(role == UserRole.barangayStaff ? 'Approve & Forward' : 'Approve'),
@@ -120,28 +125,30 @@ class _StaffBeneficiaryDashboardScreenState extends State<StaffBeneficiaryDashbo
         backgroundColor: const Color(0xFF0D47A1),
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SegmentedButton<ApplicationStatus>(
-              segments: [
-                if (isBarangay)
-                  const ButtonSegment(value: ApplicationStatus.pendingBarangay, label: Text('Pending Review')),
-                if (isBarangay)
-                  const ButtonSegment(value: ApplicationStatus.pendingMunicipal, label: Text('Forwarded')),
-                if (isMunicipal)
-                  const ButtonSegment(value: ApplicationStatus.pendingMunicipal, label: Text('Pending Final Review')),
-                
-                const ButtonSegment(value: ApplicationStatus.approved, label: Text('Approved')),
-                const ButtonSegment(value: ApplicationStatus.rejected, label: Text('Rejected')),
-              ],
-              selected: {_filterStatus},
-              onSelectionChanged: (Set<ApplicationStatus> newSelection) {
-                setState(() => _filterStatus = newSelection.first);
-              },
+      body: RefreshIndicator(
+        onRefresh: () => provider.fetchAllApplications(),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SegmentedButton<ApplicationStatus>(
+                segments: [
+                  if (isBarangay)
+                    const ButtonSegment(value: ApplicationStatus.pendingBarangay, label: Text('Pending Review')),
+                  if (isBarangay)
+                    const ButtonSegment(value: ApplicationStatus.pendingMunicipal, label: Text('Forwarded')),
+                  if (isMunicipal)
+                    const ButtonSegment(value: ApplicationStatus.pendingMunicipal, label: Text('Pending Final Review')),
+                  
+                  const ButtonSegment(value: ApplicationStatus.approved, label: Text('Approved')),
+                  const ButtonSegment(value: ApplicationStatus.rejected, label: Text('Rejected')),
+                ],
+                selected: {_filterStatus},
+                onSelectionChanged: (Set<ApplicationStatus> newSelection) {
+                  setState(() => _filterStatus = newSelection.first);
+                },
+              ),
             ),
-          ),
           Expanded(
             child: filteredApps.isEmpty
                 ? const Center(child: Text('No applications found in this category.'))
@@ -169,6 +176,7 @@ class _StaffBeneficiaryDashboardScreenState extends State<StaffBeneficiaryDashbo
           ),
         ],
       ),
+    ),
     );
   }
 }

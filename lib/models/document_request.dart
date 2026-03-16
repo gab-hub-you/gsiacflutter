@@ -34,6 +34,43 @@ class DocumentRequest {
     this.attachmentPath,
   });
 
+  factory DocumentRequest.fromJson(Map<String, dynamic> json) {
+    return DocumentRequest(
+      trackingNumber: json['tracking_number'],
+      type: json['type'],
+      purpose: json['purpose'],
+      dateSubmitted: DateTime.parse(json['date_submitted']),
+      status: RequestStatus.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => RequestStatus.pending,
+      ),
+      issuingOffice: IssuingOffice.values.firstWhere(
+        (e) => e.name == json['issuing_office'],
+        orElse: () => IssuingOffice.barangay,
+      ),
+      currentOffice: IssuingOffice.values.firstWhere(
+        (e) => e.name == json['current_office'],
+        orElse: () => IssuingOffice.barangay,
+      ),
+      rejectionReason: json['rejection_reason'],
+      attachmentPath: json['attachment_path'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tracking_number': trackingNumber,
+      'type': type,
+      'purpose': purpose,
+      'date_submitted': dateSubmitted.toIso8601String(),
+      'status': status.name,
+      'issuing_office': issuingOffice.name,
+      'current_office': currentOffice.name,
+      'rejection_reason': rejectionReason,
+      'attachment_path': attachmentPath,
+    };
+  }
+
   String get statusText {
     switch (status) {
       case RequestStatus.pending: return 'Pending Review';

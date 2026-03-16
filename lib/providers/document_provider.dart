@@ -1,112 +1,145 @@
+import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/document_request.dart';
 
 class DocumentProvider extends ChangeNotifier {
+  final _supabase = Supabase.instance.client;
   final List<DocumentRequest> _requests = [];
   bool _isLoading = false;
+  bool _isSubmitting = false;
 
   List<DocumentRequest> get requests => [..._requests];
   bool get isLoading => _isLoading;
+  bool get isSubmitting => _isSubmitting;
 
   Future<String> submitRequest({
+    required String citizenId,
     required String type,
     required String purpose,
     required IssuingOffice office,
     String? attachmentPath,
+    Uint8List? attachmentBytes,
+    String? attachmentFileName,
   }) async {
+    _isSubmitting = true;
+    notifyListeners();
+
+    try {
+      String? uploadedUrl;
+      if (attachmentBytes != null || attachmentPath != null) {
+        final name = attachmentFileName ?? attachmentPath?.split('/').last ?? 'attachment';
+        final fileName = 'doc_${DateTime.now().millisecondsSinceEpoch}_$name';
+        final path = '$citizenId/requests/$fileName';
+        
+        final data = attachmentBytes ?? await File(attachmentPath!).readAsBytes();
+        await _supabase.storage.from('verification-docs').uploadBinary(path, data);
+        
+        uploadedUrl = _supabase.storage.from('verification-docs').getPublicUrl(path);
+      }
+
+      final trackingNumber = "TRK-${DateTime.now().millisecondsSinceEpoch}";
+      
+      final requestData = {
+        'tracking_number': trackingNumber,
+        'citizen_id': citizenId,
+        'type': type,
+        'purpose': purpose,
+        'status': RequestStatus.pending.name,
+        'issuing_office': office.name,
+        'current_office': IssuingOffice.barangay.name,
+        'attachment_path': uploadedUrl,
+        'date_submitted': DateTime.now().toIso8601String(),
+      };
+
+      await _supabase.from('document_requests').insert(requestData);
+      
+      await fetchRequests(citizenId);
+      
+      return trackingNumber;
+    } catch (e) {
+      debugPrint("Error submitting request: $e");
+      rethrow;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateRequestStatus(String trk, RequestStatus newStatus, {String? refreshCitizenId}) async {
+    try {
+      await _supabase
+          .from('document_requests')
+          .update({'status': newStatus.name})
+          .eq('tracking_number', trk);
+      
+      if (refreshCitizenId != null) {
+        await fetchRequests(refreshCitizenId);
+      } else {
+        await fetchAllRequests();
+      }
+    } catch (e) {
+      debugPrint("Error updating request status: $e");
+    }
+  }
+
+  Future<void> forwardToMunicipal(String trk, {String? refreshCitizenId}) async {
+    try {
+      await _supabase
+          .from('document_requests')
+          .update({
+            'status': RequestStatus.sentToMunicipal.name,
+            'current_office': IssuingOffice.municipal.name,
+          })
+          .eq('tracking_number', trk);
+      
+      if (refreshCitizenId != null) {
+        await fetchRequests(refreshCitizenId);
+      } else {
+        await fetchAllRequests();
+      }
+    } catch (e) {
+      debugPrint("Error forwarding to municipal: $e");
+    }
+  }
+
+  Future<void> fetchRequests(String citizenId) async {
     _isLoading = true;
     notifyListeners();
-
-    // MOCK API Call
-    await Future.delayed(const Duration(seconds: 1));
-
-    final trackingNumber = "TRK-${DateTime.now().millisecondsSinceEpoch}";
-    final newRequest = DocumentRequest(
-      trackingNumber: trackingNumber,
-      type: type,
-      purpose: purpose,
-      dateSubmitted: DateTime.now(),
-      status: RequestStatus.pending,
-      issuingOffice: office,
-      currentOffice: IssuingOffice.barangay, // All requests go to Barangay first
-      attachmentPath: attachmentPath,
-    );
-
-    _requests.insert(0, newRequest);
-    _isLoading = false;
-    notifyListeners();
-    return trackingNumber;
-  }
-
-  // Inter-agency workflow methods
-  Future<void> updateRequestStatus(String trk, RequestStatus newStatus) async {
-    final index = _requests.indexWhere((r) => r.trackingNumber == trk);
-    if (index != -1) {
-      final r = _requests[index];
-      _requests[index] = DocumentRequest(
-        trackingNumber: r.trackingNumber,
-        type: r.type,
-        purpose: r.purpose,
-        dateSubmitted: r.dateSubmitted,
-        status: newStatus,
-        issuingOffice: r.issuingOffice,
-        currentOffice: r.currentOffice,
-        attachmentPath: r.attachmentPath,
-      );
+    try {
+      final response = await _supabase
+          .from('document_requests')
+          .select()
+          .eq('citizen_id', citizenId)
+          .order('date_submitted', ascending: false);
+      
+      _requests.clear();
+      _requests.addAll((response as List).map((r) => DocumentRequest.fromJson(r)).toList());
+    } catch (e) {
+      debugPrint("Error fetching requests: $e");
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> forwardToMunicipal(String trk) async {
-    final index = _requests.indexWhere((r) => r.trackingNumber == trk);
-    if (index != -1) {
-      final r = _requests[index];
-      _requests[index] = DocumentRequest(
-        trackingNumber: r.trackingNumber,
-        type: r.type,
-        purpose: r.purpose,
-        dateSubmitted: r.dateSubmitted,
-        status: RequestStatus.sentToMunicipal,
-        issuingOffice: r.issuingOffice,
-        currentOffice: IssuingOffice.municipal,
-        attachmentPath: r.attachmentPath,
-      );
+  Future<void> fetchAllRequests() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _supabase
+          .from('document_requests')
+          .select()
+          .order('date_submitted', ascending: false);
+      
+      _requests.clear();
+      _requests.addAll((response as List).map((r) => DocumentRequest.fromJson(r)).toList());
+    } catch (e) {
+      debugPrint("Error fetching all requests: $e");
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<void> fetchRequests() async {
-    if (_requests.isEmpty) {
-      _requests.addAll([
-        DocumentRequest(
-          trackingNumber: "TRK-100200",
-          type: "Barangay Clearance",
-          purpose: "Employment",
-          dateSubmitted: DateTime.now().subtract(const Duration(days: 2)),
-          status: RequestStatus.completed,
-          issuingOffice: IssuingOffice.barangay,
-          currentOffice: IssuingOffice.barangay,
-        ),
-        DocumentRequest(
-          trackingNumber: "TRK-100201",
-          type: "Birth Certificate",
-          purpose: "Passport Application",
-          dateSubmitted: DateTime.now().subtract(const Duration(days: 1)),
-          status: RequestStatus.sentToMunicipal,
-          issuingOffice: IssuingOffice.municipal,
-          currentOffice: IssuingOffice.municipal,
-        ),
-        DocumentRequest(
-          trackingNumber: "TRK-100202",
-          type: "Cedula",
-          purpose: "General Requirement",
-          dateSubmitted: DateTime.now(),
-          status: RequestStatus.pending,
-          issuingOffice: IssuingOffice.municipal,
-          currentOffice: IssuingOffice.barangay,
-        ),
-      ]);
-    }
-    notifyListeners();
   }
 }

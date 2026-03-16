@@ -17,25 +17,28 @@ class ApplyBeneficiaryScreen extends StatefulWidget {
 
 class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
   BeneficiaryProgram? _selectedProgram;
-  final List<PlatformFile> _attachedFiles = [];
-  bool _isSubmitting = false;
+  final Map<String, PlatformFile> _attachedFiles = {}; // Maps requirement name to file
 
-  void _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+  void _pickFile(String requirement) async {
+    final result = await FilePicker.platform.pickFiles();
     if (result != null) {
       setState(() {
-        _attachedFiles.addAll(result.files);
+        _attachedFiles[requirement] = result.files.first;
       });
     }
   }
 
   void _submitApplication() async {
     if (_selectedProgram == null) return;
-    if (_attachedFiles.isEmpty && _selectedProgram!.requirements.isNotEmpty) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload required supporting documents.')),
-      );
-      return;
+    
+    // Check if all requirements have a file
+    for (var req in _selectedProgram!.requirements) {
+      if (!_attachedFiles.containsKey(req)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please upload: $req')),
+        );
+        return;
+      }
     }
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -51,14 +54,16 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
       return;
     }
 
-    setState(() => _isSubmitting = true);
-
     try {
       final provider = Provider.of<BeneficiaryProvider>(context, listen: false);
       final trackingId = await provider.submitApplication(
         citizenId: user.id,
         program: _selectedProgram!,
-        docs: _attachedFiles.map((e) => e.path!).toList(),
+        docs: _attachedFiles.values.map((f) => {
+          'name': f.name,
+          'bytes': f.bytes,
+          'path': f.path,
+        }).toList(),
       );
 
       if (mounted) {
@@ -70,8 +75,6 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
           SnackBar(content: Text('Submission failed: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -351,41 +354,71 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Please upload a clear copy of each required document.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 16),
                 ..._selectedProgram!.requirements.map((req) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.check_circle_outline, color: Colors.orange, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(req, style: const TextStyle(fontSize: 13))),
+                      Row(
+                        children: [
+                          const Icon(Icons.description_outlined, color: Color(0xFF0D47A1), size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(req, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _pickFile(req),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: _attachedFiles.containsKey(req) ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _attachedFiles.containsKey(req) ? Colors.green.withValues(alpha: 0.5) : Colors.blue.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _attachedFiles.containsKey(req) ? Icons.check_circle_rounded : Icons.add_circle_outline_rounded,
+                                color: _attachedFiles.containsKey(req) ? Colors.green : Colors.blue,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _attachedFiles.containsKey(req) ? _attachedFiles[req]!.name : 'Upload Document',
+                                  style: TextStyle(
+                                    color: _attachedFiles.containsKey(req) ? Colors.green[700] : Colors.blue[700],
+                                    fontWeight: _attachedFiles.containsKey(req) ? FontWeight.bold : FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (_attachedFiles.containsKey(req))
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => setState(() => _attachedFiles.remove(req)),
+                                  icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 )),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: _pickFiles,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.upload_file_rounded, color: Colors.blue, size: 32),
-                        const SizedBox(height: 8),
-                        Text('Tap to upload documents', style: TextStyle(color: Colors.blue[800], fontWeight: FontWeight.bold)),
-                        if (_attachedFiles.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text('${_attachedFiles.length} files attached', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                        ]
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ).animate().fadeIn(delay: 200.ms).slideY(),
@@ -394,13 +427,13 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitApplication,
+              onPressed: context.watch<BeneficiaryProvider>().isSubmitting ? null : _submitApplication,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0D47A1),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: _isSubmitting 
+              child: context.watch<BeneficiaryProvider>().isSubmitting 
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text('Submit Application', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),

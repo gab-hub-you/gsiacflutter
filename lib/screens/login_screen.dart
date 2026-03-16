@@ -84,8 +84,8 @@ Positioned.fill(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Colors.black.withOpacity(0.45),
-          Colors.black.withOpacity(0.25),
+          Colors.black.withValues(alpha: 0.45),
+          Colors.black.withValues(alpha: 0.25),
         ],
       ),
     ),
@@ -101,7 +101,7 @@ Positioned.fill(
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -125,11 +125,11 @@ Positioned.fill(
                           Container(
   padding: const EdgeInsets.all(4),
   decoration: BoxDecoration(
-    color: Colors.white.withOpacity(0.9),
+    color: Colors.white.withValues(alpha: 0.9),
     shape: BoxShape.circle,
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.1),
+        color: Colors.black.withValues(alpha: 0.1),
         blurRadius: 20,
         spreadRadius: 5,
       ),
@@ -156,7 +156,7 @@ Positioned.fill(
                               letterSpacing: 1.5,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   offset: const Offset(0, 4),
                                   blurRadius: 10,
                                 ),
@@ -168,7 +168,7 @@ Positioned.fill(
                             'Citizen Digital Portal',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 2,
                             ),
                           ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
@@ -233,7 +233,7 @@ Positioned.fill(
                             children: [
                               Text(
                                 "Don't have an account?",
-                                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.push(
@@ -268,7 +268,7 @@ Positioned.fill(
               child: Text(
                 '© 2026 Unified Local Government Platform',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 10,
                   letterSpacing: 1,
                 ),
@@ -293,14 +293,14 @@ Positioned.fill(
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         prefixIcon: Icon(icon, color: Colors.white70),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

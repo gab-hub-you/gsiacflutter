@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 class LocationService {
   static const String baseUrl = 'https://psgc.gitlab.io/api';
@@ -16,7 +17,7 @@ class LocationService {
         }).toList()..sort((a, b) => a['name']!.compareTo(b['name']!));
       }
     } catch (e) {
-      print('Error fetching municipalities: $e');
+      debugPrint('Error fetching municipalities: $e');
     }
     return [];
   }
@@ -29,7 +30,7 @@ class LocationService {
         return data.map((b) => b['name'] as String).toList()..sort();
       }
     } catch (e) {
-      print('Error fetching barangays: $e');
+      debugPrint('Error fetching barangays: $e');
     }
     return [];
   }

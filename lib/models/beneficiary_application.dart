@@ -36,35 +36,35 @@ class BeneficiaryApplication {
   factory BeneficiaryApplication.fromJson(Map<String, dynamic> json) {
     return BeneficiaryApplication(
       id: json['id'],
-      citizenId: json['citizenId'],
-      programId: json['programId'],
-      programName: json['programName'] ?? 'Social Program',
+      citizenId: json['citizen_id'],
+      programId: json['program_id'],
+      programName: json['program_name'] ?? 'Social Program',
       status: ApplicationStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => ApplicationStatus.pendingBarangay,
       ),
-      trackingId: json['trackingId'],
-      dateSubmitted: DateTime.parse(json['dateSubmitted']),
-      supportingDocs: List<String>.from(json['supportingDocs'] ?? []),
-      qrCode: json['qrCode'],
+      trackingId: json['tracking_id'],
+      dateSubmitted: DateTime.parse(json['date_submitted']),
+      supportingDocs: List<String>.from(json['supporting_docs'] ?? []),
+      qrCode: json['qr_code'],
       remarks: json['remarks'],
-      approvalDate: json['approvalDate'] != null ? DateTime.parse(json['approvalDate']) : null,
+      approvalDate: json['approval_date'] != null ? DateTime.parse(json['approval_date']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'citizenId': citizenId,
-      'programId': programId,
-      'programName': programName,
+      'citizen_id': citizenId,
+      'program_id': programId,
+      'program_name': programName,
       'status': status.name,
-      'trackingId': trackingId,
-      'dateSubmitted': dateSubmitted.toIso8601String(),
-      'supportingDocs': supportingDocs,
-      'qrCode': qrCode,
+      'tracking_id': trackingId,
+      'date_submitted': dateSubmitted.toIso8601String(),
+      'supporting_docs': supportingDocs,
+      'qr_code': qrCode,
       'remarks': remarks,
-      'approvalDate': approvalDate?.toIso8601String(),
+      'approval_date': approvalDate?.toIso8601String(),
     };
   }
 }

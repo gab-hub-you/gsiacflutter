@@ -17,7 +17,9 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<DocumentProvider>().fetchRequests());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DocumentProvider>().fetchAllRequests();
+    });
   }
 
   @override
@@ -45,16 +47,28 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
         backgroundColor: const Color(0xFF0D47A1),
         foregroundColor: Colors.white,
       ),
-      body: filteredRequests.isEmpty
-          ? const Center(child: Text('No pending requests for your office.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredRequests.count,
-              itemBuilder: (context, index) {
-                final request = filteredRequests[index];
-                return _buildRequestCard(request, user!);
-              },
-            ),
+      body: RefreshIndicator(
+        onRefresh: () => docProvider.fetchAllRequests(),
+        child: docProvider.isLoading && filteredRequests.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : filteredRequests.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.4),
+                      const Center(child: Text('No pending requests for your office.')),
+                    ],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredRequests.length,
+                    itemBuilder: (context, index) {
+                      final request = filteredRequests[index];
+                      return _buildRequestCard(request, user!);
+                    },
+                  ),
+      ),
     );
   }
 
@@ -93,11 +107,12 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
             Text('Date: ${DateFormat('MMM dd, yyyy HH:mm').format(request.dateSubmitted)}', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
             const SizedBox(height: 16),
             const Divider(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (user.role == UserRole.barangayStaff) ...[
-                  if (request.issuingOffice == IssuingOffice.barangay && request.status == RequestStatus.pending)
+                  if (request.status == RequestStatus.pending)
                     TextButton(
                       onPressed: () => context.read<DocumentProvider>().updateRequestStatus(request.trackingNumber, RequestStatus.completed),
                       child: const Text('Approve & Issue'),
@@ -129,8 +144,4 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
       ),
     );
   }
-}
-
-extension on List {
-  int get count => length;
 }

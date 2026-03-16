@@ -29,7 +29,7 @@ class BeneficiaryProgram {
         (e) => e.name == json['type'],
         orElse: () => BenefitType.financial,
       ),
-      paymentSchedule: json['paymentSchedule'] ?? 'Monthly',
+      paymentSchedule: json['payment_schedule'] ?? 'Monthly',
       amount: (json['amount'] as num?)?.toDouble(),
     );
   }
@@ -41,7 +41,7 @@ class BeneficiaryProgram {
       'description': description,
       'requirements': requirements,
       'type': type.name,
-      'paymentSchedule': paymentSchedule,
+      'payment_schedule': paymentSchedule,
       'amount': amount,
     };
   }

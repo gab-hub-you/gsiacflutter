@@ -7,7 +7,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
-import '../models/citizen.dart';
 import '../services/location_service.dart';
 import 'dashboard_screen.dart';
 
@@ -279,7 +278,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
           ),
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
             ),
           ),
           Center(
@@ -568,7 +567,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
 
   Widget _buildMunicipalityDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedTownCode,
+      initialValue: _selectedTownCode,
       items: _municipalities.map((m) => DropdownMenuItem(value: m['code'], child: Text(m['name']!))).toList(),
       onChanged: (val) {
         setState(() {
@@ -594,7 +593,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
 
   Widget _buildBarangayDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedBarangay,
+      initialValue: _selectedBarangay,
       items: _barangays.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: (val) => setState(() => _selectedBarangay = val),
       dropdownColor: const Color(0xFF1A237E),
@@ -619,7 +618,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
     required IconData icon,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: onChanged,
       dropdownColor: const Color(0xFF1A237E),

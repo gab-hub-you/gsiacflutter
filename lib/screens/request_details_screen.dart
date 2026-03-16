@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import '../models/document_request.dart';
 
 class RequestDetailsScreen extends StatelessWidget {

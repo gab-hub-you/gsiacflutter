@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -99,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     letterSpacing: 4,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         offset: const Offset(0, 4),
                         blurRadius: 10,
                       ),
@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   'Unified Local Government Platform',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     letterSpacing: 1.5,
                   ),
                 ).animate().fadeIn(delay: 800.ms),

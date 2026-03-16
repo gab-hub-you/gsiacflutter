@@ -125,8 +125,8 @@ Positioned.fill(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Colors.black.withOpacity(0.45),
-          Colors.black.withOpacity(0.25),
+          Colors.black.withValues(alpha: 0.45),
+          Colors.black.withValues(alpha: 0.25),
         ],
       ),
     ),
@@ -142,7 +142,7 @@ Positioned.fill(
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
           ),
@@ -171,7 +171,7 @@ Positioned.fill(
                               letterSpacing: 1,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   offset: const Offset(0, 4),
                                   blurRadius: 10,
                                 ),
@@ -183,7 +183,7 @@ Positioned.fill(
                             'Secure your digital identity',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 1.5,
                             ),
                           ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
@@ -285,7 +285,7 @@ Positioned.fill(
                             children: [
                               Text(
                                 "Already have an account?",
-                                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -339,14 +339,14 @@ Positioned.fill(
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         prefixIcon: Icon(icon, color: Colors.white70),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

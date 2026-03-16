@@ -25,10 +25,10 @@ class GlassCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
           decoration: BoxDecoration(
-            color: baseColor.withOpacity(opacity),
+            color: baseColor.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: baseColor.withOpacity(0.2),
+              color: baseColor.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),

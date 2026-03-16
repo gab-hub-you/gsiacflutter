@@ -28,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (result == null || result.files.isEmpty) return;
 
     final file = result.files.first;
+    if (!mounted) return;
     if (file.bytes == null) return;
 
     setState(() => _isUploading = true);
@@ -128,8 +129,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.45),
-                    Colors.black.withOpacity(0.25),
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
                   ],
                 ),
               ),
@@ -138,71 +139,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // Main Content
           Positioned.fill(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildProfileHeader(user),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        _buildProfileCard(
-                          'PERSONAL RECORDS',
-                          Icons.fingerprint_rounded,
-                          [
-                            _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
-                            _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
-                            _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
-                          ],
-                        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
-                        const SizedBox(height: 16),
-                        _buildProfileCard(
-                          'RESIDENCE & STATUS',
-                          Icons.home_work_rounded,
-                          [
-                            _buildInfoRow('Primary Address', user?.address ?? 'Not set'),
-                            _buildInfoRow(
-                              'Portal Status', 
-                              user?.verificationStatus.name.toUpperCase() ?? 'UNVERIFIED', 
-                              isStatus: true,
-                              statusColor: user?.verificationStatus == VerificationStatus.verified ? Colors.green[700] : Colors.orange[700],
-                            ),
-                          ],
-                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                        const SizedBox(height: 16),
-                        if (user?.verificationStatus == VerificationStatus.unverified)
-                          ElevatedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (ctx) => const CitizenValidationScreen()),
-                            ),
-                            icon: const Icon(Icons.verified_user_rounded),
-                            label: const Text('Verify My Identity Now'),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: const Color(0xFF0D47A1),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                          ).animate().fadeIn(delay: 250.ms).scale()
-                        else
-                          ElevatedButton.icon(
-                            onPressed: () => _showCorrectionDialog(context),
-                            icon: const Icon(Icons.edit_document),
-                            label: const Text('Request Information Correction'),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: Colors.white.withOpacity(0.92),
-                              foregroundColor: Colors.orange[900],
-                              side: BorderSide(color: Colors.orange[200]!),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                          ).animate().fadeIn(delay: 300.ms).scale(),
-                        const SizedBox(height: 32),
-                      ],
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await context.read<AuthProvider>().refreshProfile();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(user),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          _buildProfileCard(
+                            'PERSONAL RECORDS',
+                            Icons.fingerprint_rounded,
+                            [
+                              _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
+                              _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
+                              _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
+                            ],
+                          ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 16),
+                          _buildProfileCard(
+                            'RESIDENCE & STATUS',
+                            Icons.home_work_rounded,
+                            [
+                              _buildInfoRow('Primary Address', user?.address ?? 'Not set'),
+                              _buildInfoRow(
+                                'Portal Status', 
+                                user?.verificationStatus.name.toUpperCase() ?? 'UNVERIFIED', 
+                                isStatus: true,
+                                statusColor: user?.verificationStatus == VerificationStatus.verified ? Colors.green[700] : Colors.orange[700],
+                              ),
+                            ],
+                          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 16),
+                          if (user?.verificationStatus == VerificationStatus.unverified)
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (ctx) => const CitizenValidationScreen()),
+                              ),
+                              icon: const Icon(Icons.verified_user_rounded),
+                              label: const Text('Verify My Identity Now'),
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 60),
+                                backgroundColor: const Color(0xFF0D47A1),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                            ).animate().fadeIn(delay: 250.ms).scale()
+                          else
+                            ElevatedButton.icon(
+                              onPressed: () => _showCorrectionDialog(context),
+                              icon: const Icon(Icons.edit_document),
+                              label: const Text('Request Information Correction'),
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 60),
+                                backgroundColor: Colors.white.withValues(alpha: 0.92),
+                                foregroundColor: Colors.orange[900],
+                                side: BorderSide(color: Colors.orange[200]!),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                            ).animate().fadeIn(delay: 300.ms).scale(),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -219,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.4),
+            Colors.black.withValues(alpha: 0.4),
             Colors.transparent,
           ],
         ),
@@ -279,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           Text(
             'LGU MEMBER SINCE 2024',
-            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10, letterSpacing: 2),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 10, letterSpacing: 2),
           ),
         ],
       ),
@@ -289,10 +296,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileCard(String title, IconData icon, List<Widget> items) {
     return Card(
       elevation: 0,
-      color: Colors.white.withOpacity(0.92),
+      color: Colors.white.withValues(alpha: 0.92),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

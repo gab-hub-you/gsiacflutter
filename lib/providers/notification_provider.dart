@@ -1,70 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/notification.dart';
 
 class NotificationProvider with ChangeNotifier {
-  final List<AppNotification> _notifications = [
-    AppNotification(
-      id: '1',
-      title: 'Request Approved',
-      message: 'Your request for Barangay Clearance (TRK-100201) has been approved.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      type: NotificationType.success,
-    ),
-    AppNotification(
-      id: '2',
-      title: 'Request Pending',
-      message: 'Your request for Business Permit (TRK-100205) is now pending review.',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      type: NotificationType.warning,
-    ),
-    AppNotification(
-      id: '3',
-      title: 'Request Denied',
-      message: 'Your request for Senior Citizen ID (TRK-100199) was denied due to incomplete documents.',
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      type: NotificationType.error,
-    ),
-  ];
+  final _supabase = Supabase.instance.client;
+  List<AppNotification> _notifications = [];
+  bool _isLoading = false;
 
   List<AppNotification> get notifications => [..._notifications];
-
+  bool get isLoading => _isLoading;
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
-  void markAsRead(String id) {
-    final index = _notifications.indexWhere((n) => n.id == id);
-    if (index >= 0) {
-      _notifications[index].isRead = true;
+  Future<void> fetchNotifications(String userId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await _supabase
+          .from('notifications')
+          .select()
+          .eq('user_id', userId)
+          .order('timestamp', ascending: false);
+      
+      _notifications = (response as List).map((n) => AppNotification.fromJson(n)).toList();
+    } catch (e) {
+      debugPrint("Error fetching notifications: $e");
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  void markAllAsRead() {
-    for (var n in _notifications) {
-      n.isRead = true;
+  Future<void> markAsRead(String id) async {
+    try {
+      await _supabase.from('notifications').update({'is_read': true}).eq('id', id);
+      
+      final index = _notifications.indexWhere((n) => n.id == id);
+      if (index >= 0) {
+        _notifications[index].isRead = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Error marking notification as read: $e");
     }
-    notifyListeners();
   }
 
-  void removeNotification(String id) {
-    _notifications.removeWhere((n) => n.id == id);
-    notifyListeners();
+  Future<void> markAllAsRead(String userId) async {
+    try {
+      await _supabase.from('notifications').update({'is_read': true}).eq('user_id', userId);
+      
+      for (var n in _notifications) {
+        n.isRead = true;
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error marking all notifications as read: $e");
+    }
   }
 
-  void addNotification({
+  Future<void> removeNotification(String id) async {
+    try {
+      await _supabase.from('notifications').delete().eq('id', id);
+      _notifications.removeWhere((n) => n.id == id);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error removing notification: $e");
+    }
+  }
+
+  Future<void> addNotification({
+    required String userId,
     required String title,
     required String message,
     required NotificationType type,
-  }) {
-    _notifications.insert(
-      0,
-      AppNotification(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: title,
-        message: message,
-        timestamp: DateTime.now(),
-        type: type,
-      ),
-    );
-    notifyListeners();
+  }) async {
+    try {
+      final notificationData = {
+        'user_id': userId,
+        'title': title,
+        'message': message,
+        'type': type.name,
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+      };
+
+      await _supabase.from('notifications').insert(notificationData);
+      await fetchNotifications(userId);
+    } catch (e) {
+      debugPrint("Error adding notification: $e");
+    }
   }
 }
