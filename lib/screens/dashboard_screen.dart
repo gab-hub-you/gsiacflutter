@@ -119,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ).animate().fadeIn().slideX(),
                         const SizedBox(height: 16),
-                        _buildServiceGrid(context, isVerified),
+                        _buildServiceGrid(context, user, isVerified),
                         const SizedBox(height: 32),
                         
                         const Text(
@@ -246,11 +246,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     : null,
               ),
               const SizedBox(width: 12),
-              Text(
-                'Welcome back,',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 16),
+              Expanded(
+                child: Text(
+                  'Welcome back,',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -260,7 +262,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Text(
                   statusMsg,
-                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -274,6 +277,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontWeight: FontWeight.bold,
               shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
             ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           const SizedBox(height: 16),
           if (status == VerificationStatus.verified)
@@ -346,67 +351,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).animate().fadeIn().slideY(begin: -0.1);
   }
 
-  Widget _buildServiceGrid(BuildContext context, bool isVerified) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.1,
-      children: [
-        _buildServiceTile(
-          context: context, 
-          label: 'Request', 
-          icon: Icons.description_rounded, 
-          sub: 'Documents',
-          bg: const Color(0xFFE3F2FD), 
-          iconColor: const Color(0xFF1976D2), 
-          target: const RequestDocumentScreen(), 
-          delay: 0,
-          enabled: true, // Always active
-        ),
-        _buildServiceTile(
-          context: context,
-          label: 'History', 
-          icon: Icons.history_edu_rounded, 
-          sub: 'My Requests',
-          bg: const Color(0xFFFFF3E0), 
-          iconColor: const Color(0xFFF57C00), 
-          target: const MyRequestsScreen(), 
-          delay: 100,
-        ),
-        _buildServiceTile(
-          context: context,
-          label: 'Profile', 
-          icon: Icons.person_pin_rounded, 
-          sub: 'Account Info',
-          bg: const Color(0xFFE8F5E9), 
-          iconColor: const Color(0xFF388E3C), 
-          target: const ProfileScreen(), 
-          delay: 200,
-        ),
-        _buildServiceTile(
-          context: context,
-          label: 'Apply', 
-          icon: Icons.volunteer_activism_rounded, 
-          sub: 'Social Benefits',
-          bg: const Color(0xFFF1F8E9), 
-          iconColor: const Color(0xFF43A047), 
-          target: const ApplyBeneficiaryScreen(),
-          delay: 300,
-        ),
-        _buildServiceTile(
-          context: context,
-          label: 'Status', 
-          icon: Icons.track_changes_rounded, 
-          sub: 'Benefit Tracking',
-          bg: const Color(0xFFE0F7FA), 
-          iconColor: const Color(0xFF00ACC1), 
-          target: const MyBeneficiaryApplicationsScreen(),
-          delay: 400,
-        ),
-      ],
+  Widget _buildServiceGrid(BuildContext context, Citizen? user, bool isVerified) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 360;
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: isNarrow ? 1 : 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: isNarrow ? 3.0 : 1.1,
+          children: [
+            _buildServiceTile(
+              context: context, 
+              label: 'Request', 
+              icon: Icons.description_rounded, 
+              sub: 'Documents',
+              bg: const Color(0xFFE3F2FD), 
+              iconColor: const Color(0xFF1976D2), 
+              target: const RequestDocumentScreen(), 
+              delay: 0,
+              enabled: true,
+            ),
+            _buildServiceTile(
+              context: context,
+              label: 'History', 
+              icon: Icons.history_edu_rounded, 
+              sub: 'My Requests',
+              bg: const Color(0xFFFFF3E0), 
+              iconColor: const Color(0xFFF57C00), 
+              target: const MyRequestsScreen(), 
+              delay: 100,
+            ),
+            _buildServiceTile(
+              context: context,
+              label: 'Profile', 
+              icon: Icons.person_pin_rounded, 
+              sub: 'Account Info',
+              bg: const Color(0xFFE8F5E9), 
+              iconColor: const Color(0xFF388E3C), 
+              target: const ProfileScreen(), 
+              delay: 200,
+              leadingWidget: user?.profilePictureUrl != null 
+                ? CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(user!.profilePictureUrl!),
+                  )
+                : null,
+            ),
+            _buildServiceTile(
+              context: context,
+              label: 'Apply', 
+              icon: Icons.volunteer_activism_rounded, 
+              sub: 'Social Benefits',
+              bg: const Color(0xFFF1F8E9), 
+              iconColor: const Color(0xFF43A047), 
+              target: const ApplyBeneficiaryScreen(),
+              delay: 300,
+            ),
+            _buildServiceTile(
+              context: context,
+              label: 'Status', 
+              icon: Icons.track_changes_rounded, 
+              sub: 'Benefit Tracking',
+              bg: const Color(0xFFE0F7FA), 
+              iconColor: const Color(0xFF00ACC1), 
+              target: const MyBeneficiaryApplicationsScreen(),
+              delay: 400,
+            ),
+          ],
+        );
+      }
     );
   }
 
@@ -420,6 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Widget? target, 
     required int delay,
     bool enabled = true,
+    Widget? leadingWidget,
   }) {
     return Card(
       elevation: 0,
@@ -439,9 +456,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               }),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
@@ -449,22 +464,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: enabled ? bg : Colors.grey[300], 
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon, color: enabled ? iconColor : Colors.grey[600], size: 28),
+                child: leadingWidget ?? Icon(icon, color: enabled ? iconColor : Colors.grey[600], size: 28),
               ),
-              const SizedBox(height: 16),
-              Text(
-                label, 
-                style: TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 16,
-                  color: enabled ? Colors.black : Colors.black45,
-                ),
-              ),
-              Text(
-                sub, 
-                style: TextStyle(
-                  color: enabled ? Colors.grey[600] : Colors.grey[400], 
-                  fontSize: 12,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label, 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: 16,
+                        color: enabled ? Colors.black : Colors.black45,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    Text(
+                      sub, 
+                      style: TextStyle(
+                        color: enabled ? Colors.grey[600] : Colors.grey[400], 
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -514,8 +541,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(latest.type, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(latest.trackingNumber, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(
+                        latest.type, 
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        latest.trackingNumber, 
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -593,7 +628,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(latest.programName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        latest.programName, 
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       Text(
                         latest.status == ApplicationStatus.approved ? 'Approved Beneficiary' : 'Application in Progress',
                         style: TextStyle(
@@ -601,6 +640,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

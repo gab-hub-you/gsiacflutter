@@ -228,7 +228,8 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                             const Expanded(
                               child: Text(
                                 'Verification Required: You can fill out this form, but submission requires a verified account.',
-                                style: TextStyle(color: Colors.white70, fontSize: 12),
+                                style: TextStyle(color: Colors.white70, fontSize: 11), // Slightly smaller font
+                                overflow: TextOverflow.clip, // Prevent push
                               ),
                             ),
                           ],
@@ -247,7 +248,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           Row(
                             children: [
                               _buildOfficeTab(IssuingOffice.barangay, 'Barangay Office', Icons.home_work_rounded),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8), // Reduced from 12
                               _buildOfficeTab(IssuingOffice.municipal, 'Municipal Hall', Icons.location_city_rounded),
                             ],
                           ),
@@ -255,7 +256,8 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           _buildStepTitle('2. Document Type'),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            initialValue: _selectedType,
+                            isExpanded: true, // Force expansion to prevent overflow
+                            value: _selectedType, // Changed from initialValue to value for better sync
                             decoration: InputDecoration(
                               hintText: _selectedOffice == null ? 'Select Office First' : 'Select Document',
                               prefixIcon: const Icon(Icons.description_outlined),
@@ -268,7 +270,13 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                             ),
                             items: _selectedOffice == null 
                               ? [] 
-                              : _categorizedDocs[_selectedOffice!]!.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                              : _categorizedDocs[_selectedOffice!]!.map((type) => DropdownMenuItem(
+                                  value: type, 
+                                  child: Text(
+                                    type,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )).toList(),
                             onChanged: (v) => setState(() => _selectedType = v!),
                             validator: (v) => v == null ? 'Please select a document' : null,
                           ),
@@ -393,7 +401,13 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                 children: [
                   const Icon(Icons.check_circle_rounded, color: Colors.green),
                   const SizedBox(width: 12),
-                  Text(_attachedFile!.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(
+                      _attachedFile!.name, 
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   IconButton(
                       onPressed: () => setState(() => _attachedFile = null),
@@ -434,12 +448,16 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                 size: 28,
               ),
               const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[800],
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 12,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.grey[800],
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis, // Added ellipsis
                 ),
               ),
             ],

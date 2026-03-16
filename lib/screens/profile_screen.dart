@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isUploading = false;
+  Uint8List? _previewBytes;
 
   Future<void> _pickAndUploadImage() async {
     final result = await FilePicker.platform.pickFiles(
@@ -31,7 +33,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     if (file.bytes == null) return;
 
-    setState(() => _isUploading = true);
+    setState(() {
+      _isUploading = true;
+      _previewBytes = file.bytes;
+    });
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final url = await authProvider.uploadProfilePicture(
@@ -41,13 +46,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isUploading = false);
 
-    if (url != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile picture updated!')),
-      );
+    if (url != null) {
+      await authProvider.refreshProfile(); // Vital: Pull the latest from DB
+      if (mounted) {
+        setState(() => _previewBytes = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated and saved!')),
+        );
+      }
     } else if (mounted) {
+      setState(() => _previewBytes = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Upload failed')),
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Upload failed'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -129,8 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.45),
-                    Colors.black.withValues(alpha: 0.25),
+                    Colors.black.withOpacity(0.45),
+                    Colors.black.withOpacity(0.25),
                   ],
                 ),
               ),
@@ -246,10 +259,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: CircleAvatar(
                   radius: 54,
                   backgroundColor: Colors.white,
-                  backgroundImage: user?.profilePictureUrl != null
-                      ? NetworkImage(user!.profilePictureUrl!)
-                      : null,
-                  child: user?.profilePictureUrl == null
+                  backgroundImage: _previewBytes != null
+                      ? MemoryImage(_previewBytes!)
+                      : (user?.profilePictureUrl != null
+                          ? NetworkImage(user!.profilePictureUrl!)
+                          : null),
+                  child: (_previewBytes == null && user?.profilePictureUrl == null)
                       ? const Icon(Icons.person_rounded, size: 60, color: Color(0xFF0D47A1))
                       : null,
                 ),
@@ -283,10 +298,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontWeight: FontWeight.bold,
               shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
             ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           Text(
             'LGU MEMBER SINCE 2024',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 10, letterSpacing: 2),
+            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10, letterSpacing: 2),
           ),
         ],
       ),
@@ -296,10 +313,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileCard(String title, IconData icon, List<Widget> items) {
     return Card(
       elevation: 0,
-      color: Colors.white.withValues(alpha: 0.92),
+      color: Colors.white.withOpacity(0.92),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+        side: BorderSide(color: Colors.white.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,12 +344,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isStatus ? (statusColor ?? Colors.green[700]) : Colors.black87,
+          Flexible(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isStatus ? (statusColor ?? Colors.green[700]) : Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

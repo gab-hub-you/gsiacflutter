@@ -84,10 +84,14 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  request.type,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                Expanded(
+                  child: Text(
+                    request.type,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(

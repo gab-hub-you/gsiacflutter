@@ -31,7 +31,19 @@ class AppDrawer extends StatelessWidget {
           _buildItem(context, Icons.dashboard_rounded, 'Overview Dashboard', const DashboardScreen(), true),
           _buildItem(context, Icons.note_add_rounded, 'Request Documents', const RequestDocumentScreen(), false),
           _buildItem(context, Icons.list_alt_rounded, 'Tracking History', const MyRequestsScreen(), false),
-          _buildItem(context, Icons.account_circle_rounded, 'Personal Profile', const ProfileScreen(), false),
+          _buildItem(
+            context, 
+            Icons.account_circle_rounded, 
+            'Personal Profile', 
+            const ProfileScreen(), 
+            false,
+            leadingWidget: CircleAvatar(
+              radius: 12,
+              backgroundColor: const Color(0xFF0D47A1).withValues(alpha: 0.1),
+              backgroundImage: user?.profilePictureUrl != null ? NetworkImage(user!.profilePictureUrl!) : null,
+              child: user?.profilePictureUrl == null ? const Icon(Icons.person, size: 14, color: Color(0xFF0D47A1)) : null,
+            ),
+          ),
           if (user?.verificationStatus == VerificationStatus.unverified && user?.role == UserRole.citizen)
             _buildItem(context, Icons.verified_user_rounded, 'Verify Account', const CitizenValidationScreen(), false),
 
@@ -79,20 +91,24 @@ class AppDrawer extends StatelessWidget {
           Text(
             user?.displayName ?? 'Citizen User',
             style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           Text(
             user?.email ?? 'citizen.portal@lgu.gov',
             style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildItem(BuildContext context, IconData icon, String title, Widget target, bool isReplace) {
+  Widget _buildItem(BuildContext context, IconData icon, String title, Widget target, bool isReplace, {Widget? leadingWidget}) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Icon(icon, color: const Color(0xFF0D47A1), size: 22),
+      leading: leadingWidget ?? Icon(icon, color: const Color(0xFF0D47A1), size: 22),
       title: Text(
         title,
         style: GoogleFonts.outfit(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500),

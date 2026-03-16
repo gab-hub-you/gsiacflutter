@@ -56,6 +56,7 @@ class AuthProvider extends ChangeNotifier {
           address: metadata['address'] ?? '',
           birthdate: DateTime.tryParse(metadata['birthdate'] ?? '') ?? DateTime.now(),
           email: user.email ?? '',
+          profilePictureUrl: metadata['profilePictureUrl'],
           verificationStatus: VerificationStatus.values.firstWhere(
             (e) => e.name == (metadata['verificationStatus'] ?? 'unverified'),
             orElse: () => VerificationStatus.unverified,
@@ -217,6 +218,7 @@ class AuthProvider extends ChangeNotifier {
         'gov_id_url': govIdUrl,
         'selfie_url': selfieUrl,
         'verification_status': VerificationStatus.pending.name,
+        'profile_picture_url': _user?.profilePictureUrl,
       });
       
       // Sync local user object
@@ -292,17 +294,24 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
-      final path = '$userId/$fileName';
+      final path = '$userId/profiles/$fileName';
       
       await Supabase.instance.client.storage
-          .from('avatars')
-          .uploadBinary(path, Uint8List.fromList(bytes));
+          .from('verification-docs')
+          .uploadBinary(
+            path, 
+            Uint8List.fromList(bytes),
+            fileOptions: const FileOptions(upsert: true),
+          );
 
       final url = Supabase.instance.client.storage
-          .from('avatars')
+          .from('verification-docs')
           .getPublicUrl(path);
 
-      await updateProfileMetadata({'profilePictureUrl': url});
+      final success = await updateProfileMetadata({'profilePictureUrl': url});
+      if (!success) {
+        throw Exception(_errorMessage ?? 'Failed to update database profile');
+      }
       
       _isLoading = false;
       notifyListeners();
@@ -346,9 +355,11 @@ class AuthProvider extends ChangeNotifier {
       });
 
       if (dbData.isNotEmpty) {
+        debugPrint("Syncing to citizens table for user $userId: $dbData");
         await Supabase.instance.client
             .from('citizens')
-            .upsert({'id': userId, ...dbData});
+            .update(dbData)
+            .eq('id', userId);
       }
       
       // Update local user object lazily

@@ -553,12 +553,18 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
           children: [
             Icon(icon, color: Colors.white38, size: 20),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
-                Text(value, style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text(
+                    value, 
+                    style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
