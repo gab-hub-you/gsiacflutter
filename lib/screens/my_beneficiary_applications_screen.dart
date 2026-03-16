@@ -23,19 +23,9 @@ class MyBeneficiaryApplicationsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('My Benefits', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white.withValues(alpha: 0.15),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: ClipRect(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-              ),
-            ),
-          ),
-        ),
       ),
       drawer: const AppDrawer(),
       body: Stack(

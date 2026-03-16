@@ -186,7 +186,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
           'gov_id_${DateTime.now().millisecondsSinceEpoch}.jpg'
         );
         
-        if (govIdUrl == null) throw Exception('Failed to upload Government ID');
+        if (govIdUrl == null) throw Exception(authProvider.errorMessage ?? 'Failed to upload Government ID');
 
         // Upload Selfie
         selfieUrl = await authProvider.uploadVerificationDocument(
@@ -194,7 +194,7 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
           'selfie_${DateTime.now().millisecondsSinceEpoch}.jpg'
         );
 
-        if (selfieUrl == null) throw Exception('Failed to upload Selfie');
+        if (selfieUrl == null) throw Exception(authProvider.errorMessage ?? 'Failed to upload Selfie');
 
         // Finalize Citizen Validation
         final success = await authProvider.validateCitizen(
@@ -441,19 +441,19 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
                           ] else ...[
                             const SizedBox(height: 16),
                             _buildImageUploadSection(
-                              label: 'Government Issued ID',
-                              description: 'Upload a photo of your valid ID (Postal, Voter, Driver, etc.) from your gallery.',
-                              icon: Icons.badge_rounded,
-                              imageFile: _govIdImage,
-                              onTap: () => _pickImage(false),
-                            ).animate().fadeIn(delay: 200.ms).slideX(),
-                            const SizedBox(height: 24),
-                            _buildImageUploadSection(
                               label: 'Selfie (Face Capture)',
                               description: 'Take a clear selfie showing your face for verification.',
                               icon: Icons.face_rounded,
                               imageFile: _selfieImage,
                               onTap: () => _pickImage(true),
+                            ).animate().fadeIn(delay: 200.ms).slideX(),
+                            const SizedBox(height: 24),
+                            _buildImageUploadSection(
+                              label: 'Government Issued ID',
+                              description: 'Upload a photo of your valid ID (Postal, Voter, Driver, etc.) from your gallery.',
+                              icon: Icons.badge_rounded,
+                              imageFile: _govIdImage,
+                              onTap: () => _pickImage(false),
                             ).animate().fadeIn(delay: 400.ms).slideX(),
                             const SizedBox(height: 24),
                              const Text(

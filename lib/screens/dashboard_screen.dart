@@ -27,7 +27,7 @@ class DashboardScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.15),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -38,16 +38,6 @@ class DashboardScreen extends StatelessWidget {
           _buildNotificationIcon(context),
           const SizedBox(width: 8),
         ],
-        flexibleSpace: ClipRect(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
-              ),
-            ),
-          ),
-        ),
       ),
       drawer: const AppDrawer(),
       body: Stack(

@@ -100,22 +100,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.15),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'My Identity',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        flexibleSpace: ClipRect(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withOpacity(0.2)),
-              ),
-            ),
-          ),
         ),
       ),
       body: Stack(

@@ -10,31 +10,26 @@ class RequestDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isMunicipal = request.issuingOffice == IssuingOffice.municipal;
     int currentStep = 0;
     if (request.status == RequestStatus.verifiedByBarangay) currentStep = 1;
-    if (request.status == RequestStatus.sentToMunicipal || request.status == RequestStatus.processing) currentStep = 2;
-    if (request.status == RequestStatus.completed || request.status == RequestStatus.rejected) currentStep = 3;
+    if (request.status == RequestStatus.sentToMunicipal || request.status == RequestStatus.processing) {
+      currentStep = isMunicipal ? 2 : 1;
+    }
+    if (request.status == RequestStatus.completed || request.status == RequestStatus.rejected) {
+      currentStep = isMunicipal ? 3 : 2;
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.15),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Track Application',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        flexibleSpace: ClipRect(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-              ),
-            ),
-          ),
         ),
       ),
       body: Stack(
@@ -157,6 +152,7 @@ class RequestDetailsScreen extends StatelessWidget {
 
   Widget _buildTrackingStepper(BuildContext context, int currentStep) {
     bool isMunicipal = request.issuingOffice == IssuingOffice.municipal;
+    int finalIndex = isMunicipal ? 3 : 2;
     
     return Card(
       elevation: 0,
@@ -203,8 +199,8 @@ class RequestDetailsScreen extends StatelessWidget {
                   ? 'Review complete with issues'
                   : 'Ready for pickup/delivery'),
               content: _buildTerminalContent(context),
-              isActive: currentStep >= 3,
-              state: request.status == RequestStatus.rejected ? StepState.error : (currentStep == 3 ? StepState.complete : StepState.indexed),
+              isActive: currentStep >= finalIndex,
+              state: request.status == RequestStatus.rejected ? StepState.error : (currentStep == finalIndex ? StepState.complete : StepState.indexed),
             ),
           ],
         ),

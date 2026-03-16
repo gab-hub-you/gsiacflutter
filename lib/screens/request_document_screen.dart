@@ -155,22 +155,12 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.15),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'New Application',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        flexibleSpace: ClipRect(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-              ),
-            ),
-          ),
         ),
       ),
       body: Stack(

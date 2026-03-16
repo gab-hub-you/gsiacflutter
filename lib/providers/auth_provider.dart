@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -253,7 +254,7 @@ class AuthProvider extends ChangeNotifier {
       
       await Supabase.instance.client.storage
           .from('verification-docs')
-          .uploadBinary(path, bytes as dynamic, retryAttempts: 3);
+          .uploadBinary(path, Uint8List.fromList(bytes));
 
       final url = Supabase.instance.client.storage
           .from('verification-docs')
@@ -283,7 +284,7 @@ class AuthProvider extends ChangeNotifier {
       
       await Supabase.instance.client.storage
           .from('avatars')
-          .uploadBinary(path, bytes as dynamic, retryAttempts: 3);
+          .uploadBinary(path, Uint8List.fromList(bytes));
 
       final url = Supabase.instance.client.storage
           .from('avatars')
