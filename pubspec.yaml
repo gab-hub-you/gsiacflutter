@@ -72,6 +72,8 @@ flutter:
     - .env
     - lib/assets/image/bg.webp
     - lib/assets/image/lg.webp
+    - lib/assets/image/bgcgreen.png
+    - lib/assets/image/mplogo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
