@@ -79,17 +79,41 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   
             // Content
             Positioned.fill(
-              child: provider.isLoading && provider.requests.isEmpty
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
-                      itemCount: provider.requests.length,
-                      itemBuilder: (context, index) {
-                        final req = provider.requests[index];
-                        return _buildRequestCard(req, index);
-                      },
-                    ),
+            child: Column(
+              children: [
+                const SizedBox(height: 80), // Adjust for AppBar
+                if (provider.isLoading)
+                  const LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                  ),
+                Expanded(
+                  child: provider.requests.isEmpty && !provider.isLoading
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.description_outlined, size: 80, color: Colors.white54),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No requests found',
+                              style: TextStyle(color: Colors.white70, fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        itemCount: provider.requests.length,
+                        itemBuilder: (context, index) {
+                          final req = provider.requests[index];
+                          return _buildRequestCard(req, index);
+                        },
+                      ),
+                ),
+              ],
+            ),
             ),
           ],
         ),

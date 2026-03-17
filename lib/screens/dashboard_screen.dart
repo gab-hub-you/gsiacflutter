@@ -49,11 +49,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isVerified = user?.verificationStatus == VerificationStatus.verified;
     final isPending = user?.verificationStatus == VerificationStatus.pending;
 
-    // Refresh triggers
-    if (user != null && context.read<BeneficiaryProvider>().applications.isEmpty && !context.read<BeneficiaryProvider>().isLoading) {
-       _fetchInitialData();
-    }
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,

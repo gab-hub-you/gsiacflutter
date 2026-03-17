@@ -85,37 +85,47 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 await notificationProvider.fetchNotifications(user.id);
               }
             },
-            child: notificationProvider.isLoading && notifications.isEmpty
-                ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                : notifications.isEmpty
-                    ? ListView( // Use ListView for RefreshIndicator to work on empty state
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.notifications_none_rounded, size: 80, color: Colors.white54),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'No notifications yet',
-                                  style: TextStyle(color: Colors.white70, fontSize: 18),
-                                ),
-                              ],
+            child: Column(
+              children: [
+                const SizedBox(height: 100), // Adjust for AppBar
+                if (notificationProvider.isLoading)
+                  const LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                  ),
+                Expanded(
+                  child: notifications.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.notifications_none_rounded, size: 80, color: Colors.white54),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'No notifications yet',
+                                    style: TextStyle(color: Colors.white70, fontSize: 18),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      )
-                    : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
-                        itemCount: notifications.length,
-                        itemBuilder: (ctx, index) {
-                          final notification = notifications[index];
-                          return _buildNotificationCard(context, notificationProvider, notification, index);
-                        },
-                      ),
+                          ],
+                        )
+                      : ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: notifications.length,
+                          itemBuilder: (ctx, index) {
+                            final notification = notifications[index];
+                            return _buildNotificationCard(context, notificationProvider, notification, index);
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

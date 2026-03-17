@@ -77,19 +77,29 @@ class _MyBeneficiaryApplicationsScreenState extends State<MyBeneficiaryApplicati
                 ),
               ),
             ),
-            provider.isLoading && applications.isEmpty
-                ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                : applications.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 120, 20, 20),
-                        itemCount: applications.length,
-                        itemBuilder: (context, index) {
-                          final app = applications[index];
-                          return _buildApplicationCard(app, context).animate().fadeIn(delay: (index * 100).ms).slideY(begin: 0.2);
-                        },
-                      ),
+            Column(
+              children: [
+                const SizedBox(height: 100), // Adjust for AppBar
+                if (provider.isLoading)
+                  const LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                  ),
+                Expanded(
+                  child: applications.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                          itemCount: applications.length,
+                          itemBuilder: (context, index) {
+                            final app = applications[index];
+                            return _buildApplicationCard(app, context).animate().fadeIn(delay: (index * 100).ms).slideY(begin: 0.2);
+                          },
+                        ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
