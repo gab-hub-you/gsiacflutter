@@ -24,6 +24,34 @@ class BeneficiaryProvider extends ChangeNotifier {
     try {
       final response = await _supabase.from('beneficiary_programs').select();
       _programs = (response as List).map((p) => BeneficiaryProgram.fromJson(p)).toList();
+      
+      // Ensure specific programs are present (Fallback/Seed logic)
+      final requiredPrograms = [
+        {'name': '4Ps', 'type': 'financial', 'schedule': 'Monthly', 'req': ['ID', 'Barangay Indigency']},
+        {'name': 'Senior Citizen', 'type': 'discount', 'schedule': 'Lifetime', 'req': ['Valid ID (60+)', 'Birth Certificate']},
+        {'name': 'AICS', 'type': 'financial', 'schedule': 'One-time', 'req': ['Case Study', 'ID']},
+        {'name': 'TUPAD', 'type': 'financial', 'schedule': 'Project-based', 'req': ['ID', 'Police Clearance']},
+        {'name': 'PWD', 'type': 'discount', 'schedule': 'Lifetime', 'req': ['PWD ID Application', 'Medical Certificate']},
+        {'name': 'Farmers', 'type': 'financial', 'schedule': 'Seasonal', 'req': ['RSBSA Enrollment']},
+        {'name': 'Solo Parent', 'type': 'discount', 'schedule': 'Annual', 'req': ['Solo Parent ID']},
+        {'name': 'Student Scholarship', 'type': 'scholarship', 'schedule': 'Semesteral', 'req': ['Report Card', 'Indigency']},
+      ];
+
+      for (var rp in requiredPrograms) {
+        final progName = rp['name'] as String;
+        if (!_programs.any((p) => p.name == progName)) {
+           // If not in DB, add to local list for UI completeness
+           _programs.add(BeneficiaryProgram(
+              id: progName.toLowerCase().replaceAll(' ', '_'),
+              name: progName,
+              description: 'Social welfare program for $progName.',
+              requirements: rp['req'] as List<String>,
+              type: BenefitType.values.firstWhere((e) => e.name == rp['type'] as String, orElse: () => BenefitType.financial),
+              paymentSchedule: rp['schedule'] as String,
+           ));
+        }
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint("Error fetching programs: $e");
@@ -108,6 +136,16 @@ class BeneficiaryProvider extends ChangeNotifier {
 
       await _supabase.from('beneficiary_applications').insert(applicationData);
       
+      // Add notification
+      await _supabase.from('notifications').insert({
+        'user_id': citizenId,
+        'title': 'Benefit Application Submitted',
+        'message': 'Your application for ${program.name} has been received (TRK: $trackingId).',
+        'type': 'success',
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+      });
+
       // Refresh applications list
       await fetchApplications(citizenId);
       
@@ -132,6 +170,20 @@ class BeneficiaryProvider extends ChangeNotifier {
 
       await _supabase.from('beneficiary_applications').update(updateData).eq('id', applicationId);
       
+      // Notify user
+      final citizenIdResult = await _supabase.from('beneficiary_applications').select('citizen_id, program_name').eq('id', applicationId).single();
+      final targetCitizenId = citizenIdResult['citizen_id'] as String;
+      final progName = citizenIdResult['program_name'] as String;
+
+      await _supabase.from('notifications').insert({
+        'user_id': targetCitizenId,
+        'title': 'Benefit Status Updated',
+        'message': 'Your $progName application status is now ${status.name}.',
+        'type': status == ApplicationStatus.approved ? 'success' : (status == ApplicationStatus.rejected ? 'error' : 'info'),
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+      });
+
       // Update local state if needed or re-fetch
       final index = _applications.indexWhere((a) => a.id == applicationId);
       if (index != -1) {

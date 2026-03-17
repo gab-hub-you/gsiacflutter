@@ -55,6 +55,16 @@ class DocumentProvider extends ChangeNotifier {
 
       await _supabase.from('document_requests').insert(requestData);
       
+      // Add notification
+      await _supabase.from('notifications').insert({
+        'user_id': citizenId,
+        'title': 'Request Submitted',
+        'message': 'Your request for $type has been submitted successfully (TRK: $trackingNumber).',
+        'type': 'success',
+        'timestamp': DateTime.now().toIso8601String(),
+        'is_read': false,
+      });
+
       await fetchRequests(citizenId);
       
       return trackingNumber;
@@ -75,6 +85,16 @@ class DocumentProvider extends ChangeNotifier {
           .eq('tracking_number', trk);
       
       if (refreshCitizenId != null) {
+        // Fetch the request to get the type for notification if needed, but we can just use the status
+        await _supabase.from('notifications').insert({
+          'user_id': refreshCitizenId,
+          'title': 'Request Updated',
+          'message': 'Your request $trk status has been updated to ${newStatus.name}.',
+          'type': newStatus == RequestStatus.completed ? 'success' : (newStatus == RequestStatus.rejected ? 'error' : 'info'),
+          'timestamp': DateTime.now().toIso8601String(),
+          'is_read': false,
+        });
+
         await fetchRequests(refreshCitizenId);
       } else {
         await fetchAllRequests();
@@ -95,6 +115,14 @@ class DocumentProvider extends ChangeNotifier {
           .eq('tracking_number', trk);
       
       if (refreshCitizenId != null) {
+        await _supabase.from('notifications').insert({
+          'user_id': refreshCitizenId,
+          'title': 'Request Forwarded',
+          'message': 'Your request $trk has been forwarded to the Municipal Hall for final review.',
+          'type': 'warning',
+          'timestamp': DateTime.now().toIso8601String(),
+          'is_read': false,
+        });
         await fetchRequests(refreshCitizenId);
       } else {
         await fetchAllRequests();

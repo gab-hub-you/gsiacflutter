@@ -65,46 +65,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showCorrectionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Information Correction'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('What information needs adjustment?'),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Describe the correction needed...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              maxLines: 4,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Discard')),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Ticket #7721 submitted for review.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D47A1), foregroundColor: Colors.white),
-            child: const Text('Submit Ticket'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +140,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icons.home_work_rounded,
                             [
                               _buildInfoRow('Primary Address', user?.address ?? 'Not set'),
+                              _buildInfoRow('Town', user?.town ?? 'Not set'),
+                              _buildInfoRow('Barangay', user?.barangay ?? 'Not set'),
                               _buildInfoRow(
                                 'Portal Status', 
                                 user?.verificationStatus.name.toUpperCase() ?? 'UNVERIFIED', 
@@ -188,6 +150,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ],
                           ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 16),
+                          _buildProfileCard(
+                            'ADDITIONAL DETAILS',
+                            Icons.info_outline_rounded,
+                            [
+                              _buildInfoRow('Sex', user?.sex ?? 'Not specified'),
+                              _buildInfoRow('Civil Status', user?.status ?? 'Not specified'),
+                            ],
+                          ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
                           const SizedBox(height: 16),
                           if (user?.verificationStatus == VerificationStatus.unverified)
                             ElevatedButton.icon(
@@ -201,19 +172,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 minimumSize: const Size(double.infinity, 60),
                                 backgroundColor: const Color(0xFF0D47A1),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                            ).animate().fadeIn(delay: 250.ms).scale()
-                          else
-                            ElevatedButton.icon(
-                              onPressed: () => _showCorrectionDialog(context),
-                              icon: const Icon(Icons.edit_document),
-                              label: const Text('Request Information Correction'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 60),
-                                backgroundColor: Colors.white.withValues(alpha: 0.92),
-                                foregroundColor: Colors.orange[900],
-                                side: BorderSide(color: Colors.orange[200]!),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               ),
                             ).animate().fadeIn(delay: 300.ms).scale(),

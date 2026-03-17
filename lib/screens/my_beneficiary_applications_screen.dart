@@ -83,7 +83,7 @@ class _MyBeneficiaryApplicationsScreenState extends State<MyBeneficiaryApplicati
                     ? _buildEmptyState()
                     : ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 120, 20, 20),
                         itemCount: applications.length,
                         itemBuilder: (context, index) {
                           final app = applications[index];

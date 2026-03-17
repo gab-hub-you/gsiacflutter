@@ -624,18 +624,20 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
     required IconData icon,
   }) {
     return DropdownButtonFormField<String>(
+      isExpanded: true, // Added to prevent overflow
       initialValue: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, overflow: TextOverflow.ellipsis))).toList(),
       onChanged: onChanged,
       dropdownColor: const Color(0xFF1A237E),
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.white70, fontSize: 13), // Slightly smaller font
+        prefixIcon: Icon(icon, color: Colors.white70, size: 20),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }

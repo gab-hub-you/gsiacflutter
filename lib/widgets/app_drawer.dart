@@ -133,11 +133,36 @@ class AppDrawer extends StatelessWidget {
         style: GoogleFonts.outfit(fontSize: 15, color: Colors.redAccent, fontWeight: FontWeight.bold),
       ),
       onTap: () {
-        Provider.of<AuthProvider>(context, listen: false).logout();
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (ctx) => const LoginScreen()),
-          (route) => false,
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Logout Confirmation'),
+            content: const Text('Are you sure you want to log out?'),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Provider.of<AuthProvider>(context, listen: false).logout();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (ctx) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Log out'),
+              ),
+            ],
+          ),
         );
       },
     );
