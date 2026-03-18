@@ -9,7 +9,7 @@ import 'request_document_screen.dart';
 import 'my_requests_screen.dart';
 import 'profile_screen.dart';
 import 'notification_screen.dart';
-import 'apply_beneficiary_screen.dart';
+import 'social_benefits_screen.dart';
 import 'my_beneficiary_applications_screen.dart';
 import '../providers/notification_provider.dart';
 import '../providers/beneficiary_provider.dart';
@@ -402,7 +402,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               sub: 'Social Benefits',
               bg: const Color(0xFFF1F8E9), 
               iconColor: const Color(0xFF43A047), 
-              target: const ApplyBeneficiaryScreen(),
+              target: const SocialBenefitsScreen(),
               delay: 300,
             ),
             _buildServiceTile(

@@ -9,14 +9,14 @@ import '../providers/beneficiary_provider.dart';
 import 'citizen_validation_screen.dart';
 
 class ApplyBeneficiaryScreen extends StatefulWidget {
-  const ApplyBeneficiaryScreen({super.key});
+  final BeneficiaryProgram program;
+  const ApplyBeneficiaryScreen({super.key, required this.program});
 
   @override
   State<ApplyBeneficiaryScreen> createState() => _ApplyBeneficiaryScreenState();
 }
 
 class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
-  BeneficiaryProgram? _selectedProgram;
   final Map<String, PlatformFile> _attachedFiles = {}; // Maps requirement name to file
 
   void _pickFile(String requirement) async {
@@ -29,10 +29,8 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
   }
 
   void _submitApplication() async {
-    if (_selectedProgram == null) return;
-    
     // Check if all requirements have a file
-    for (var req in _selectedProgram!.requirements) {
+    for (var req in widget.program.requirements) {
       if (!_attachedFiles.containsKey(req)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please upload: $req')),
@@ -58,7 +56,7 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
       final provider = Provider.of<BeneficiaryProvider>(context, listen: false);
       final trackingId = await provider.submitApplication(
         citizenId: user.id,
-        program: _selectedProgram!,
+        program: widget.program,
         docs: _attachedFiles.values.map((f) => {
           'name': f.name,
           'bytes': f.bytes,
@@ -76,6 +74,54 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
         );
       }
     }
+  }
+
+  // ... (Dialog methods remain same)
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D47A1),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Benefit Application',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: _buildApplicationForm(),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showVerificationDialog() {
@@ -140,151 +186,12 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pop(context); // Go back to dashboard
+              Navigator.pop(context); // Go back to details
+              Navigator.pop(context); // Go back to list
             },
-            child: const Text('Back to Dashboard'),
+            child: const Text('Back to Programs'),
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<BeneficiaryProvider>();
-    final programs = provider.programs;
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Social Benefits Platform',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'lib/assets/image/bg.webp',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.45),
-                    Colors.black.withValues(alpha: 0.25),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: _selectedProgram == null 
-                ? _buildProgramList(programs) 
-                : _buildApplicationForm(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgramList(List<BeneficiaryProgram> programs) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Available Programs',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black45, blurRadius: 4)]),
-          ).animate().fadeIn().slideX(),
-          const SizedBox(height: 8),
-          const Text(
-            'Select a program to view eligibility and apply.',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
-          ).animate().fadeIn(delay: 100.ms),
-          const SizedBox(height: 24),
-          ...programs.asMap().entries.map((entry) {
-            final index = entry.key;
-            final program = entry.value;
-            return _buildProgramCard(program).animate().fadeIn(delay: (200 + index * 100).ms).slideY(begin: 0.2);
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgramCard(BeneficiaryProgram program) {
-    IconData icon;
-    Color color;
-    switch (program.type) {
-      case BenefitType.financial:
-        icon = Icons.attach_money_rounded;
-        color = Colors.green;
-        break;
-      case BenefitType.medical:
-        icon = Icons.medical_services_rounded;
-        color = Colors.redAccent;
-        break;
-      case BenefitType.scholarship:
-        icon = Icons.school_rounded;
-        color = Colors.blue;
-        break;
-      default:
-        icon = Icons.card_giftcard_rounded;
-        color = Colors.orange;
-    }
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      color: Colors.white.withValues(alpha: 0.95),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.white.withValues(alpha: 0.5))),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => setState(() => _selectedProgram = program),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: color.withValues(alpha: 0.15),
-                    child: Icon(icon, color: color),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(program.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 4),
-                        Text(program.paymentSchedule, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(program.description, style: TextStyle(color: Colors.grey[800], fontSize: 13)),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -298,37 +205,23 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => setState(() {
-                  _selectedProgram = null;
-                  _attachedFiles.clear();
-                }),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-              ),
-              Expanded(
-                child: Text(
-                  'Apply for ${_selectedProgram!.name}',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+          Text(
+            'Applying for ${widget.program.name}',
+            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ).animate().fadeIn().slideX(),
           const SizedBox(height: 24),
           _buildFormSection(
             title: 'Program Eligibility & Benefits',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_selectedProgram!.description, style: const TextStyle(fontSize: 14)),
+                Text(widget.program.description, style: const TextStyle(fontSize: 14)),
                 const SizedBox(height: 12),
-                if (_selectedProgram!.amount != null) ...[
-                  Text('Benefit Amount: PHP ${_selectedProgram!.amount}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                if (widget.program.amount != null) ...[
+                  Text('Benefit Amount: PHP ${widget.program.amount}', style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                 ],
-                Text('Schedule: ${_selectedProgram!.paymentSchedule}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                Text('Schedule: ${widget.program.paymentSchedule}', style: const TextStyle(fontWeight: FontWeight.w500)),
               ],
             ),
           ).animate().fadeIn().slideY(),
@@ -359,7 +252,7 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
                   style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 16),
-                ..._selectedProgram!.requirements.map((req) => Padding(
+                ...widget.program.requirements.map((req) => Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
