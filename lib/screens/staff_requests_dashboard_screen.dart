@@ -47,6 +47,7 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
         backgroundColor: const Color(0xFF0D47A1),
         foregroundColor: Colors.white,
       ),
+<<<<<<< Updated upstream
       body: RefreshIndicator(
         onRefresh: () => docProvider.fetchAllRequests(),
         child: docProvider.isLoading && filteredRequests.isEmpty
@@ -69,6 +70,19 @@ class _StaffRequestsDashboardScreenState extends State<StaffRequestsDashboardScr
                     },
                   ),
       ),
+=======
+      body: filteredRequests.isEmpty
+          ? const Center(child: Text('No pending requests for your office.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredRequests.count,
+              itemBuilder: (context, index) {
+                if (user == null) return const SizedBox.shrink();
+                final request = filteredRequests[index];
+                return _buildRequestCard(request, user);
+              },
+            ),
+>>>>>>> Stashed changes
     );
   }
 

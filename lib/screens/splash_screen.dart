@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'login_screen.dart';
@@ -12,11 +13,16 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+<<<<<<< Updated upstream
   final _connectivityService = ConnectivityService();
+=======
+  Timer? _timer;
+>>>>>>> Stashed changes
 
   @override
   void initState() {
     super.initState();
+<<<<<<< Updated upstream
     _checkInitialConnectivity();
   }
 
@@ -53,6 +59,28 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
     }
+=======
+    _timer = Timer(const Duration(milliseconds: 3000), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+>>>>>>> Stashed changes
   }
 
   @override
@@ -79,9 +107,10 @@ class _SplashScreenState extends State<SplashScreen> {
             Positioned(
               top: -50,
               left: -50,
-              child: _buildBlurCircle(Colors.white10),
-            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-              .moveY(begin: 0, end: 50, duration: 3.seconds, curve: Curves.easeInOut),
+              child: _buildBlurCircle(Colors.white10)
+                .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                .moveY(begin: 0, end: 50, duration: 3.seconds, curve: Curves.easeInOut),
+            ),
             
             Column(
               mainAxisAlignment: MainAxisAlignment.center,

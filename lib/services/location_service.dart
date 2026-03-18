@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+<<<<<<< Updated upstream
 import 'package:flutter/foundation.dart';
+=======
+import 'package:flutter/material.dart';
+>>>>>>> Stashed changes
 
 class LocationService {
   static const String baseUrl = 'https://psgc.gitlab.io/api';

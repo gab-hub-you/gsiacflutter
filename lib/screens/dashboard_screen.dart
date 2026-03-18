@@ -54,7 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
+        elevation: 4,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Citizen Portal',
@@ -66,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       drawer: const AppDrawer(),
+<<<<<<< Updated upstream
       body: RefreshIndicator(
         onRefresh: () async {
           await context.read<AuthProvider>().refreshProfile();
@@ -89,6 +90,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     colors: [
                       Colors.black.withValues(alpha: 0.45),
                       Colors.black.withValues(alpha: 0.25),
+=======
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'lib/assets/image/bg.webp',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.45),
+                    Colors.black.withValues(alpha: 0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildWelcomeHeader(context, user),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Quick Services',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
+                        ),
+                      ).animate().fadeIn().slideX(),
+                      const SizedBox(height: 16),
+                      _buildServiceGrid(context, isVerified),
+                      const SizedBox(height: 32),
+                      const Text(
+                        'Social Beneficiary Status',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
+                        ),
+                      ).animate().fadeIn(delay: 500.ms).slideX(),
+                      const SizedBox(height: 16),
+                      _buildBeneficiaryStatusCard(context),
+                      const SizedBox(height: 32),
+>>>>>>> Stashed changes
                     ],
                   ),
                 ),
@@ -173,7 +232,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const Icon(Icons.pending_actions_rounded, color: Colors.white),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Verification Pending. Some services are restricted until approved by your Barangay.',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
@@ -241,12 +300,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     : null,
               ),
               const SizedBox(width: 12),
+<<<<<<< Updated upstream
               Expanded(
                 child: Text(
                   'Welcome back,',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 16),
                   overflow: TextOverflow.ellipsis,
                 ),
+=======
+              Text(
+                'Welcome back,',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 16),
+>>>>>>> Stashed changes
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -288,7 +353,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   const Icon(Icons.verified_user_rounded, color: Colors.greenAccent, size: 20),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Your account is verified. You can now request official documents.',
                       style: TextStyle(color: Colors.white, fontSize: 13),
@@ -346,6 +411,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).animate().fadeIn().slideY(begin: -0.1);
   }
 
+<<<<<<< Updated upstream
   Widget _buildServiceGrid(BuildContext context, Citizen? user, bool isVerified) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -418,6 +484,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         );
       }
+=======
+  Widget _buildServiceGrid(BuildContext context, bool isVerified) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.1,
+      children: [
+        _buildServiceTile(
+          context: context, 
+          label: 'Request', 
+          icon: Icons.description_rounded, 
+          sub: 'Documents',
+          bg: const Color(0xFFE3F2FD), 
+          iconColor: const Color(0xFF1976D2), 
+          target: const RequestDocumentScreen(), 
+          delay: 0,
+          enabled: isVerified, 
+        ),
+        _buildServiceTile(
+          context: context,
+          label: 'History', 
+          icon: Icons.history_edu_rounded, 
+          sub: 'My Requests',
+          bg: const Color(0xFFFFF3E0), 
+          iconColor: const Color(0xFFF57C00), 
+          target: const MyRequestsScreen(), 
+          delay: 100,
+          enabled: isVerified,
+        ),
+        _buildServiceTile(
+          context: context,
+          label: 'Profile', 
+          icon: Icons.person_pin_rounded, 
+          sub: 'Account Info',
+          bg: const Color(0xFFE8F5E9), 
+          iconColor: const Color(0xFF388E3C), 
+          target: const ProfileScreen(), 
+          delay: 200,
+          enabled: true,
+        ),
+        _buildServiceTile(
+          context: context,
+          label: 'Apply', 
+          icon: Icons.volunteer_activism_rounded, 
+          sub: 'Social Benefits',
+          bg: const Color(0xFFF1F8E9), 
+          iconColor: const Color(0xFF43A047), 
+          target: const ApplyBeneficiaryScreen(),
+          delay: 300,
+          enabled: isVerified,
+        ),
+        _buildServiceTile(
+          context: context,
+          label: 'Status', 
+          icon: Icons.track_changes_rounded, 
+          sub: 'Benefit Tracking',
+          bg: const Color(0xFFE0F7FA), 
+          iconColor: const Color(0xFF00ACC1), 
+          target: const MyBeneficiaryApplicationsScreen(),
+          delay: 400,
+          enabled: isVerified,
+        ),
+      ],
+>>>>>>> Stashed changes
     );
   }
 
