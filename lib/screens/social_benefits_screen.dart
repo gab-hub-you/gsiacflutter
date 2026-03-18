@@ -70,11 +70,27 @@ class SocialBenefitsScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: 24),
-                  if (programs.isEmpty)
+                  if (provider.isLoading)
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.only(top: 100),
                         child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                    )
+                  else if (programs.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 100),
+                        child: Column(
+                          children: [
+                            Icon(Icons.inventory_2_outlined, size: 64, color: Colors.white.withValues(alpha: 0.5)),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No active programs available',
+                              style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                     )
                   else

@@ -40,7 +40,7 @@ class BeneficiaryApplication {
       programId: json['program_id'],
       programName: json['program_name'] ?? 'Social Program',
       status: ApplicationStatus.values.firstWhere(
-        (e) => e.name == json['status'],
+        (e) => fromSnakeCase(json['status']) == e.name,
         orElse: () => ApplicationStatus.pendingBarangay,
       ),
       trackingId: json['tracking_id'],
@@ -58,7 +58,7 @@ class BeneficiaryApplication {
       'citizen_id': citizenId,
       'program_id': programId,
       'program_name': programName,
-      'status': status.name,
+      'status': toSnakeCase(status.name),
       'tracking_id': trackingId,
       'date_submitted': dateSubmitted.toIso8601String(),
       'supporting_docs': supportingDocs,
@@ -66,5 +66,17 @@ class BeneficiaryApplication {
       'remarks': remarks,
       'approval_date': approvalDate?.toIso8601String(),
     };
+  }
+
+  static String toSnakeCase(String name) {
+    if (name == 'pendingBarangay') return 'pending_barangay';
+    if (name == 'pendingMunicipal') return 'pending_municipal';
+    return name;
+  }
+
+  static String fromSnakeCase(String? name) {
+    if (name == 'pending_barangay') return 'pendingBarangay';
+    if (name == 'pending_municipal') return 'pendingMunicipal';
+    return name ?? '';
   }
 }

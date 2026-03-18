@@ -47,7 +47,18 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
        return;
     } else if (user.verificationStatus == VerificationStatus.pending) {
        ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your account verification is currently pending. Please wait for approval.')),
+        const SnackBar(
+          content: Text('Your account verification is currently pending. Please wait for approval before applying.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    } else if (user.verificationStatus == VerificationStatus.rejected) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your account verification was rejected. Please update your profile and re-verify to apply.'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
@@ -209,6 +220,33 @@ class _ApplyBeneficiaryScreenState extends State<ApplyBeneficiaryScreen> {
             'Applying for ${widget.program.name}',
             style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ).animate().fadeIn().slideX(),
+          if (user?.verificationStatus != VerificationStatus.verified) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      user?.verificationStatus == VerificationStatus.pending 
+                        ? 'Your verification is pending approval.' 
+                        : user?.verificationStatus == VerificationStatus.rejected 
+                          ? 'Your verification was rejected.' 
+                          : 'You must be verified to apply.',
+                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().shake(),
+          ],
           const SizedBox(height: 24),
           _buildFormSection(
             title: 'Program Eligibility & Benefits',

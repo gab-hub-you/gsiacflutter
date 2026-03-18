@@ -219,14 +219,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              notification.title,
-                              style: TextStyle(
-                                fontWeight: notification.isRead ? FontWeight.normal : FontWeight.w900,
-                                fontSize: 16,
-                                color: const Color(0xFF1A237E),
+                            Expanded(
+                              child: Text(
+                                notification.title,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: notification.isRead ? FontWeight.normal : FontWeight.w900,
+                                  fontSize: 16,
+                                  color: const Color(0xFF1A237E),
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               DateFormat('hh:mm a').format(notification.timestamp),
                               style: TextStyle(color: Colors.grey[500], fontSize: 11),
