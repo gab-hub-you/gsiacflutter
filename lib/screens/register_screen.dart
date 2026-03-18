@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/error_dialog.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -89,13 +90,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       } else if (!success && mounted) {
         final error = authProvider.errorMessage ?? 'Registration failed';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        
+        if (error == "No Internet Connection") {
+          ErrorDialog.show(
+            context,
+            title: "No Internet Connection",
+            message: "Please check your connectivity and try again.",
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     }
   }

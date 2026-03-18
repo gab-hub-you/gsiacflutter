@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'login_screen.dart';
+import '../services/connectivity_service.dart';
+import '../widgets/error_dialog.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,14 +12,35 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _connectivityService = ConnectivityService();
+
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _checkInitialConnectivity();
   }
 
-  void _navigateToLogin() async {
-    await Future.delayed(const Duration(milliseconds: 3000));
+  void _checkInitialConnectivity() async {
+    // Small delay for animation to play
+    await Future.delayed(const Duration(milliseconds: 2000));
+    
+    final hasInternet = await _connectivityService.hasInternetConnection();
+
+    if (!hasInternet) {
+      if (mounted) {
+        ErrorDialog.show(
+          context,
+          title: "No Internet Connection",
+          message: "Please check your connectivity and try again.",
+          onRetry: _checkInitialConnectivity,
+        );
+      }
+    } else {
+      _navigateToLogin();
+    }
+  }
+
+  void _navigateToLogin() {
     if (mounted) {
       Navigator.pushReplacement(
         context,

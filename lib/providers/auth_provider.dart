@@ -101,7 +101,14 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      _errorMessage = "An unexpected error occurred. Please try again later.";
+      debugPrint("Unexpected error during login: $e");
+      if (e.toString().contains('SocketException') || 
+          e.toString().contains('ClientException') ||
+          e.toString().contains('Connection failed')) {
+        _errorMessage = "No Internet Connection";
+      } else {
+        _errorMessage = "An unexpected error occurred. Please try again later.";
+      }
       _isLoading = false;
       notifyListeners();
       return false;
@@ -154,7 +161,13 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       debugPrint("Unexpected error during registration: $e");
-      _errorMessage = "Registration failed: ${e.toString()}";
+      if (e.toString().contains('SocketException') || 
+          e.toString().contains('ClientException') ||
+          e.toString().contains('Connection failed')) {
+        _errorMessage = "No Internet Connection";
+      } else {
+        _errorMessage = "Registration failed: ${e.toString()}";
+      }
       _isLoading = false;
       notifyListeners();
       return false;
@@ -250,7 +263,14 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      debugPrint("Unexpected error during validation: $e");
+      if (e.toString().contains('SocketException') || 
+          e.toString().contains('ClientException') ||
+          e.toString().contains('Connection failed')) {
+        _errorMessage = "No Internet Connection";
+      } else {
+        _errorMessage = e.toString();
+      }
       _isLoading = false;
       notifyListeners();
       return false;

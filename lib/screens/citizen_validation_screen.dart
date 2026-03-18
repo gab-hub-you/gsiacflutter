@@ -9,6 +9,7 @@ import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
 import '../services/location_service.dart';
 import 'dashboard_screen.dart';
+import '../widgets/error_dialog.dart';
 
 class CitizenValidationScreen extends StatefulWidget {
   const CitizenValidationScreen({super.key});
@@ -214,18 +215,36 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
         if (success && mounted) {
           _showSuccessDialog();
         } else if (!success && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.errorMessage ?? 'Submission failed'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          final error = authProvider.errorMessage ?? 'Submission failed';
+          if (error == "No Internet Connection") {
+            ErrorDialog.show(
+              context,
+              title: "No Internet Connection",
+              message: "Please check your connectivity and try again.",
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString()), backgroundColor: Colors.redAccent),
-          );
+          final error = e.toString();
+          if (error.contains('SocketException') || error.contains('ClientException')) {
+            ErrorDialog.show(
+              context,
+              title: "No Internet Connection",
+              message: "Please check your connectivity and try again.",
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
+            );
+          }
         }
       }
     }

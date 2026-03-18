@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
 import '../models/citizen.dart';
 import 'register_screen.dart';
+import '../widgets/error_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,13 +48,22 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         if (mounted) {
           final error = authProvider.errorMessage ?? 'Invalid email or password';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          
+          if (error == "No Internet Connection") {
+            ErrorDialog.show(
+              context,
+              title: "No Internet Connection",
+              message: "Please check your connectivity and try again.",
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
         }
       }
     }
