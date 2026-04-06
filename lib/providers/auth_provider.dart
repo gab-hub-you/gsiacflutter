@@ -290,9 +290,9 @@ class AuthProvider extends ChangeNotifier {
           .from('verification-docs')
           .uploadBinary(path, Uint8List.fromList(bytes));
 
-      final url = Supabase.instance.client.storage
+      final url = await Supabase.instance.client.storage
           .from('verification-docs')
-          .getPublicUrl(path);
+          .createSignedUrl(path, 3600); // 1 hour expiry
       
       _isLoading = false;
       notifyListeners();
@@ -324,9 +324,9 @@ class AuthProvider extends ChangeNotifier {
             fileOptions: const FileOptions(upsert: true),
           );
 
-      final url = Supabase.instance.client.storage
+      final url = await Supabase.instance.client.storage
           .from('verification-docs')
-          .getPublicUrl(path);
+          .createSignedUrl(path, 3600); // 1 hour expiry
 
       final success = await updateProfileMetadata({'profilePictureUrl': url});
       if (!success) {

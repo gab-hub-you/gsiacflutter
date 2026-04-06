@@ -2,17 +2,32 @@ import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/document_request.dart';
 
 class DocumentProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
+  final _uuid = const Uuid();
   final List<DocumentRequest> _requests = [];
   bool _isLoading = false;
   bool _isSubmitting = false;
 
+  // Pagination
+  static const int _pageSize = 20;
+  bool _hasMore = true;
+
   List<DocumentRequest> get requests => [..._requests];
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
+  bool get hasMore => _hasMore;
+
+  /// Generates a signed URL valid for 1 hour instead of a public URL.
+  Future<String> _getSignedUrl(String bucket, String path) async {
+    final signedUrl = await _supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, 3600); // 1 hour expiry
+    return signedUrl;
+  }
 
   Future<String> submitRequest({
     required String citizenId,
@@ -36,10 +51,11 @@ class DocumentProvider extends ChangeNotifier {
         final data = attachmentBytes ?? await File(attachmentPath!).readAsBytes();
         await _supabase.storage.from('verification-docs').uploadBinary(path, data);
         
-        uploadedUrl = _supabase.storage.from('verification-docs').getPublicUrl(path);
+        uploadedUrl = await _getSignedUrl('verification-docs', path);
       }
 
-      final trackingNumber = "TRK-${DateTime.now().millisecondsSinceEpoch}";
+      // UUID-based tracking number (first 8 chars of UUID v4)
+      final trackingNumber = "TRK-${_uuid.v4().replaceAll('-', '').substring(0, 8).toUpperCase()}";
       
       final requestData = {
         'tracking_number': trackingNumber,
@@ -65,6 +81,8 @@ class DocumentProvider extends ChangeNotifier {
         'is_read': false,
       });
 
+      // Reset pagination and fetch fresh
+      _resetPagination();
       await fetchRequests(citizenId);
       
       return trackingNumber;
@@ -85,7 +103,6 @@ class DocumentProvider extends ChangeNotifier {
           .eq('tracking_number', trk);
       
       if (refreshCitizenId != null) {
-        // Fetch the request to get the type for notification if needed, but we can just use the status
         await _supabase.from('notifications').insert({
           'user_id': refreshCitizenId,
           'title': 'Request Updated',
@@ -95,6 +112,7 @@ class DocumentProvider extends ChangeNotifier {
           'is_read': false,
         });
 
+        _resetPagination();
         await fetchRequests(refreshCitizenId);
       } else {
         await fetchAllRequests();
@@ -123,6 +141,7 @@ class DocumentProvider extends ChangeNotifier {
           'timestamp': DateTime.now().toIso8601String(),
           'is_read': false,
         });
+        _resetPagination();
         await fetchRequests(refreshCitizenId);
       } else {
         await fetchAllRequests();
@@ -132,24 +151,52 @@ class DocumentProvider extends ChangeNotifier {
     }
   }
 
+  /// Fetches the first page of requests for a citizen (paginated).
   Future<void> fetchRequests(String citizenId) async {
     _isLoading = true;
     notifyListeners();
     try {
+      final from = _requests.length;
+      final to = from + _pageSize - 1;
+
       final response = await _supabase
           .from('document_requests')
           .select()
           .eq('citizen_id', citizenId)
-          .order('date_submitted', ascending: false);
+          .order('date_submitted', ascending: false)
+          .range(from, to);
       
-      _requests.clear();
-      _requests.addAll((response as List).map((r) => DocumentRequest.fromJson(r)).toList());
+      final newItems = (response as List).map((r) => DocumentRequest.fromJson(r)).toList();
+      
+      if (from == 0) {
+        _requests.clear();
+      }
+      _requests.addAll(newItems);
+      _hasMore = newItems.length >= _pageSize;
     } catch (e) {
       debugPrint("Error fetching requests: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Loads the next page of requests.
+  Future<void> fetchMoreRequests(String citizenId) async {
+    if (!_hasMore || _isLoading) return;
+    await fetchRequests(citizenId);
+  }
+
+  /// Resets pagination state for a fresh fetch.
+  void _resetPagination() {
+    _requests.clear();
+    _hasMore = true;
+  }
+
+  /// Refreshes from the beginning (pull-to-refresh).
+  Future<void> refreshRequests(String citizenId) async {
+    _resetPagination();
+    await fetchRequests(citizenId);
   }
 
   Future<void> fetchAllRequests() async {

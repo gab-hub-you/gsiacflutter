@@ -9,8 +9,6 @@ import '../screens/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../screens/citizen_validation_screen.dart';
 import '../models/citizen.dart';
-import '../screens/staff_requests_dashboard_screen.dart';
-import '../screens/staff_beneficiary_dashboard_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -44,21 +42,8 @@ class AppDrawer extends StatelessWidget {
               child: user?.profilePictureUrl == null ? const Icon(Icons.person, size: 14, color: Color(0xFF0D47A1)) : null,
             ),
           ),
-          if (user?.verificationStatus == VerificationStatus.unverified && user?.role == UserRole.citizen)
+          if (user?.verificationStatus == VerificationStatus.unverified)
             _buildItem(context, Icons.verified_user_rounded, 'Verify Account', const CitizenValidationScreen(), false),
-
-          if (user?.role == UserRole.barangayStaff || user?.role == UserRole.municipalStaff) ...[
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('STAFF DASHBOARD', style: GoogleFonts.outfit(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            _buildItem(context, Icons.admin_panel_settings_rounded, 'Document Requests', const StaffRequestsDashboardScreen(), false),
-            _buildItem(context, Icons.volunteer_activism_rounded, 'Beneficiary Apps', const StaffBeneficiaryDashboardScreen(), false),
-          ],
           const Spacer(),
           _buildLogout(context),
           const SizedBox(height: 20),

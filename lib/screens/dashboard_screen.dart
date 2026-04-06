@@ -32,13 +32,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    // Clean up Realtime subscription
+    context.read<NotificationProvider>().unsubscribeFromRealtime();
+    super.dispose();
+  }
+
   void _fetchInitialData() {
     final auth = context.read<AuthProvider>();
     final user = auth.user;
     if (user != null) {
       context.read<BeneficiaryProvider>().fetchApplications(user.id);
       context.read<DocumentProvider>().fetchRequests(user.id);
-      context.read<NotificationProvider>().fetchNotifications(user.id);
+      final notifProvider = context.read<NotificationProvider>();
+      notifProvider.fetchNotifications(user.id);
+      notifProvider.subscribeToRealtime(user.id);
     }
   }
 
@@ -118,7 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 32),
                         
                         const Text(
-                          'Recent Activity',
+                          'Recent Activity & Status',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -127,20 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ).animate().fadeIn(delay: 400.ms).slideX(),
                         const SizedBox(height: 16),
-                        _buildRecentStatusCard(context),
-                        
-                        const SizedBox(height: 32),
-                        const Text(
-                          'Social Beneficiary Status',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [Shadow(color: Colors.black38, blurRadius: 6)],
-                          ),
-                        ).animate().fadeIn(delay: 500.ms).slideX(),
-                        const SizedBox(height: 16),
-                        _buildBeneficiaryStatusCard(context),
+                        _buildCombinedStatusCard(context),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -496,23 +492,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).animate().fadeIn(delay: delay.ms).scale(begin: const Offset(0.8, 0.8));
   }
 
-  Widget _buildRecentStatusCard(BuildContext context) {
+  Widget _buildCombinedStatusCard(BuildContext context) {
     final docProvider = context.watch<DocumentProvider>();
+    final benProvider = context.watch<BeneficiaryProvider>();
     final requests = docProvider.requests;
-    
-    if (requests.isEmpty) {
+    final applications = benProvider.applications;
+
+    final hasRequests = requests.isNotEmpty;
+    final hasApplications = applications.isNotEmpty;
+
+    if (!hasRequests && !hasApplications) {
       return Card(
         elevation: 0,
         color: Colors.white.withValues(alpha: 0.92),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: const Padding(
           padding: EdgeInsets.all(24.0),
-          child: Center(child: Text('No recent document requests.', style: TextStyle(color: Colors.grey))),
+          child: Center(
+            child: Text('No recent activity or applications.', style: TextStyle(color: Colors.grey)),
+          ),
         ),
       );
     }
-
-    final latest = requests.first;
 
     return Card(
       elevation: 0,
@@ -524,155 +525,155 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- Document Request Section ---
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: latest.statusColor.withValues(alpha: 0.1),
-                  child: Icon(Icons.description_rounded, color: latest.statusColor),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        latest.type, 
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        latest.trackingNumber, 
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: latest.statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    latest.statusText,
-                    style: TextStyle(color: latest.statusColor, fontWeight: FontWeight.bold, fontSize: 10),
-                  ),
+                Icon(Icons.description_rounded, color: const Color(0xFF1976D2), size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Document Request',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700]),
                 ),
               ],
             ),
-            const Divider(height: 32),
-            ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyRequestsScreen())),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                backgroundColor: const Color(0xFF0D47A1),
-                foregroundColor: Colors.white,
-                elevation: 0,
+            const SizedBox(height: 12),
+            if (hasRequests) ...[
+              _buildDocumentRow(requests.first),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyRequestsScreen())),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(color: const Color(0xFF0D47A1).withValues(alpha: 0.3)),
+                    foregroundColor: const Color(0xFF0D47A1),
+                  ),
+                  child: const Text('View All Requests', style: TextStyle(fontSize: 13)),
+                ),
               ),
-              child: const Text('View All Tracking History'),
+            ] else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text('No recent document requests.', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+              ),
+
+            const Divider(height: 32),
+
+            // --- Beneficiary Status Section ---
+            Row(
+              children: [
+                Icon(Icons.volunteer_activism_rounded, color: const Color(0xFF43A047), size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Social Benefit Status',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                ),
+              ],
             ),
+            const SizedBox(height: 12),
+            if (hasApplications) ...[
+              _buildBeneficiaryRow(applications.first),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyBeneficiaryApplicationsScreen())),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(color: const Color(0xFF43A047).withValues(alpha: 0.3)),
+                    foregroundColor: const Color(0xFF43A047),
+                  ),
+                  child: const Text('Track My Benefits', style: TextStyle(fontSize: 13)),
+                ),
+              ),
+            ] else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text('No active benefit applications.', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+              ),
           ],
         ),
       ),
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1);
   }
 
-  Widget _buildBeneficiaryStatusCard(BuildContext context) {
-    final benProvider = context.watch<BeneficiaryProvider>();
-    final applications = benProvider.applications;
-
-    if (applications.isEmpty) {
-      return Card(
-        elevation: 0,
-        color: Colors.white.withValues(alpha: 0.92),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: const Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Center(child: Text('No active benefit applications.', style: TextStyle(color: Colors.grey))),
+  Widget _buildDocumentRow(dynamic latest) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: latest.statusColor.withValues(alpha: 0.1),
+          child: Icon(Icons.description_rounded, color: latest.statusColor, size: 18),
         ),
-      );
-    }
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(latest.type, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+              Text(latest.trackingNumber, style: TextStyle(color: Colors.grey[600], fontSize: 11), overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: latest.statusColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            latest.statusText,
+            style: TextStyle(color: latest.statusColor, fontWeight: FontWeight.bold, fontSize: 10),
+          ),
+        ),
+      ],
+    );
+  }
 
-    final latest = applications.first;
-
-    return Card(
-      elevation: 0,
-      color: Colors.white.withValues(alpha: 0.92),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: const Color(0xFFE8F5E9),
-                  child: Icon(
-                    latest.status == ApplicationStatus.approved ? Icons.check_circle_rounded : Icons.pending_rounded,
-                    color: latest.status == ApplicationStatus.approved ? const Color(0xFF2E7D32) : Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        latest.programName, 
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        latest.status == ApplicationStatus.approved ? 'Approved Beneficiary' : 'Application in Progress',
-                        style: TextStyle(
-                          color: latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: (latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    latest.status.name.toUpperCase(),
-                    style: TextStyle(
-                      color: latest.status == ApplicationStatus.approved ? Colors.green : Colors.orange,
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 32),
-            ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const MyBeneficiaryApplicationsScreen())),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                backgroundColor: const Color(0xFF0D47A1),
-                foregroundColor: Colors.white,
-                elevation: 0,
+  Widget _buildBeneficiaryRow(BeneficiaryApplication latest) {
+    final isApproved = latest.status == ApplicationStatus.approved;
+    final statusColor = isApproved ? const Color(0xFF2E7D32) : Colors.orange;
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: const Color(0xFFE8F5E9),
+          child: Icon(
+            isApproved ? Icons.check_circle_rounded : Icons.pending_rounded,
+            color: statusColor,
+            size: 18,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(latest.programName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+              Text(
+                isApproved ? 'Approved Beneficiary' : 'Application in Progress',
+                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
               ),
-              child: const Text('Track My Benefits'),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1);
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            latest.status.name.toUpperCase(),
+            style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildNotificationIcon(BuildContext context) {
