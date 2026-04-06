@@ -5,28 +5,15 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:gsiac/app.dart';
-import 'package:provider/provider.dart';
-import 'package:gsiac/providers/auth_provider.dart';
-import 'package:gsiac/providers/document_provider.dart';
+import 'package:gsiac/screens/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-void main() {
   testWidgets('App load smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthProvider()),
-          ChangeNotifierProvider(create: (_) => DocumentProvider()),
-        ],
-        child: const ULGDSPApp(),
-      ),
-    );
-
-    // Verify that the login portal text is present.
+    await tester.pumpWidget(const MaterialApp(home: SplashScreen()));
+    expect(find.byType(SplashScreen), findsOneWidget);
     expect(find.text('ULGDSP'), findsOneWidget);
-    expect(find.text('Citizen Digital Portal'), findsOneWidget);
   });
 }

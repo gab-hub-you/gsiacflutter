@@ -225,7 +225,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           children: [
                             const Icon(Icons.info_outline_rounded, color: Colors.orangeAccent),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Verification Required: You can fill out this form, but submission requires a verified account.',
                                 style: TextStyle(color: Colors.white70, fontSize: 11), // Slightly smaller font
