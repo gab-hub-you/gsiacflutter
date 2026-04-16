@@ -6,7 +6,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/auth_provider.dart';
 import '../models/citizen.dart';
 import 'citizen_validation_screen.dart';
-
 import 'package:file_picker/file_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -65,6 +64,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _showCorrectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request Correction'),
+        content: const Text(
+          'To correct your personal information, please visit your Barangay hall or contact the administrator. Official records require manual verification.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
+        elevation: 4,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'My Identity',
@@ -112,7 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // Main Content
           Positioned.fill(
-<<<<<<< Updated upstream
             child: RefreshIndicator(
               onRefresh: () async {
                 await context.read<AuthProvider>().refreshProfile();
@@ -131,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icons.fingerprint_rounded,
                             [
                               _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
-                              _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
+                              _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'Not set'),
                               _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
                             ],
                           ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
@@ -161,6 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1),
                           const SizedBox(height: 16),
+                          
                           if (user?.verificationStatus == VerificationStatus.unverified)
                             ElevatedButton.icon(
                               onPressed: () => Navigator.push(
@@ -175,74 +191,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               ),
+                            ).animate().fadeIn(delay: 300.ms).scale()
+                          else
+                            ElevatedButton.icon(
+                              onPressed: () => _showCorrectionDialog(context),
+                              icon: const Icon(Icons.edit_document),
+                              label: const Text('Request Information Correction'),
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 60),
+                                backgroundColor: Colors.white.withValues(alpha: 0.92),
+                                foregroundColor: Colors.orange[900],
+                                side: BorderSide(color: Colors.orange[200]!),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
                             ).animate().fadeIn(delay: 300.ms).scale(),
                           const SizedBox(height: 32),
                         ],
                       ),
-=======
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildProfileHeader(user),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        _buildProfileCard(
-                          'PERSONAL RECORDS',
-                          Icons.fingerprint_rounded,
-                          [
-                            _buildInfoRow('Legal Name', user?.fullName ?? 'Juan Dela Cruz'),
-                            _buildInfoRow('Birthdate', user != null ? DateFormat('MMM dd, yyyy').format(user.birthdate) : 'May 20, 1990'),
-                            _buildInfoRow('Email', user?.email ?? 'citizen@example.com'),
-                          ],
-                        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
-                        const SizedBox(height: 16),
-                        _buildProfileCard(
-                          'RESIDENCE & STATUS',
-                          Icons.home_work_rounded,
-                          [
-                            _buildInfoRow('Primary Address', user?.address ?? 'Not set'),
-                            _buildInfoRow(
-                              'Portal Status', 
-                              user?.verificationStatus.name.toUpperCase() ?? 'UNVERIFIED', 
-                              isStatus: true,
-                              statusColor: user?.verificationStatus == VerificationStatus.verified ? Colors.green[700] : Colors.orange[700],
-                            ),
-                          ],
-                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                        const SizedBox(height: 16),
-                        if (user?.verificationStatus == VerificationStatus.unverified)
-                          ElevatedButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (ctx) => const CitizenValidationScreen()),
-                            ),
-                            icon: const Icon(Icons.verified_user_rounded),
-                            label: const Text('Verify My Identity Now'),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: const Color(0xFF0D47A1),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                          ).animate().fadeIn(delay: 250.ms).scale()
-                        else
-                          ElevatedButton.icon(
-                            onPressed: () => _showCorrectionDialog(context),
-                            icon: const Icon(Icons.edit_document),
-                            label: const Text('Request Information Correction'),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: Colors.white.withValues(alpha: 0.92),
-                              foregroundColor: Colors.orange[900],
-                              side: BorderSide(color: Colors.orange[200]!),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                          ).animate().fadeIn(delay: 300.ms).scale(),
-                        const SizedBox(height: 32),
-                      ],
->>>>>>> Stashed changes
                     ),
                   ],
                 ),
@@ -254,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(dynamic user) {
+  Widget _buildProfileHeader(Citizen? user) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -314,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            user?.displayName ?? 'Juan Dela Cruz',
+            user?.displayName ?? 'Citizen',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,

@@ -4,7 +4,7 @@ import '../models/notification.dart';
 
 class NotificationProvider with ChangeNotifier {
   final _supabase = Supabase.instance.client;
-  List<AppNotification> _notifications = [];
+  final List<AppNotification> _notifications = [];
   bool _isLoading = false;
   RealtimeChannel? _realtimeChannel;
 

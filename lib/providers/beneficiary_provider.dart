@@ -17,11 +17,50 @@ class BeneficiaryProvider extends ChangeNotifier {
   static const int _pageSize = 20;
   bool _hasMore = true;
 
+  // Realtime
+  RealtimeChannel? _realtimeChannel;
+
   List<BeneficiaryProgram> get programs => _programs;
   List<BeneficiaryApplication> get applications => _applications;
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
   bool get hasMore => _hasMore;
+
+  /// Subscribes to application changes in real-time.
+  void subscribeToApplications(String citizenId) {
+    unsubscribeFromRealtime();
+
+    _realtimeChannel = _supabase
+        .channel('public:beneficiary_applications:$citizenId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'beneficiary_applications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'citizen_id',
+            value: citizenId,
+          ),
+          callback: (payload) {
+            debugPrint("Realtime update for beneficiary_applications: ${payload.eventType}");
+            refreshApplications(citizenId);
+          },
+        )
+        .subscribe();
+  }
+
+  void unsubscribeFromRealtime() {
+    if (_realtimeChannel != null) {
+      _supabase.removeChannel(_realtimeChannel!);
+      _realtimeChannel = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    unsubscribeFromRealtime();
+    super.dispose();
+  }
 
   BeneficiaryProvider() {
     fetchPrograms();
@@ -151,7 +190,7 @@ class BeneficiaryProvider extends ChangeNotifier {
         'citizen_id': citizenId,
         'program_id': program.id,
         'program_name': program.name,
-        'status': 'pending_barangay',
+        // Status is handled by the database default (pending_barangay)
         'tracking_id': trackingId,
         'date_submitted': DateTime.now().toIso8601String(),
         'supporting_docs': uploadedUrls,
@@ -186,7 +225,7 @@ class BeneficiaryProvider extends ChangeNotifier {
   Future<void> updateApplicationStatus(String applicationId, ApplicationStatus status, {String? remarks}) async {
     try {
       final updateData = {
-        'status': BeneficiaryApplication.toSnakeCase(status.name),
+        'status': BeneficiaryApplication.statusToDb(status),
         if (remarks != null) 'remarks': remarks,
         if (status == ApplicationStatus.approved) 'approval_date': DateTime.now().toIso8601String(),
         if (status == ApplicationStatus.approved) 'qr_code': "QR-$applicationId",
@@ -225,7 +264,7 @@ class BeneficiaryProvider extends ChangeNotifier {
       await _supabase
           .from('beneficiary_applications')
           .update({
-            'status': BeneficiaryApplication.toSnakeCase(ApplicationStatus.suspended.name),
+            'status': BeneficiaryApplication.statusToDb(ApplicationStatus.suspended),
             'remarks': 'AUTOMATED SYSTEM ACTION: Benefits suspended due to verified death record.',
           })
           .eq('citizen_id', citizenId)

@@ -51,31 +51,34 @@ class Citizen {
   String get displayName => verificationStatus == VerificationStatus.verified ? fullName : username;
 
   factory Citizen.fromJson(Map<String, dynamic> json) {
+    // Helper to handle both camelCase and snake_case from different sources (Auth vs DB)
+    T? getValue<T>(String camel, String snake) => (json[camel] ?? json[snake]) as T?;
+
     return Citizen(
       id: json['id'],
       username: json['username'] ?? '',
-      profilePictureUrl: json['profilePictureUrl'] ?? json['profile_picture_url'],
-      firstName: json['firstName'] ?? json['first_name'] ?? '',
-      lastName: json['lastName'] ?? json['last_name'] ?? '',
-      middleName: json['middleName'] ?? json['middle_name'],
+      profilePictureUrl: getValue('profilePictureUrl', 'profile_picture_url'),
+      firstName: getValue('firstName', 'first_name') ?? '',
+      lastName: getValue('lastName', 'last_name') ?? '',
+      middleName: getValue('middleName', 'middle_name'),
       suffix: json['suffix'],
       sex: json['sex'],
       status: json['status'],
       address: json['address'] ?? '',
       birthdate: DateTime.tryParse(json['birthdate'] ?? '') ?? DateTime.now(),
       email: json['email'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? json['phone_number'],
+      phoneNumber: getValue('phoneNumber', 'phone_number'),
       town: json['town'],
       barangay: json['barangay'],
-      govIdUrl: json['govIdUrl'] ?? json['gov_id_url'],
-      selfieUrl: json['selfieUrl'] ?? json['selfie_url'],
+      govIdUrl: getValue('govIdUrl', 'gov_id_url'),
+      selfieUrl: getValue('selfieUrl', 'selfie_url'),
       verificationStatus: VerificationStatus.values.firstWhere(
-        (e) => e.name == (json['verificationStatus'] ?? json['verification_status']),
+        (e) => e.name == getValue<String>('verificationStatus', 'verification_status'),
         orElse: () => VerificationStatus.unverified,
       ),
-      lifeStatus: json['lifeStatus'] ?? json['life_status'] ?? 'Active',
+      lifeStatus: getValue('lifeStatus', 'life_status') ?? 'Active',
       role: UserRole.values.firstWhere(
-        (e) => e.name == (json['role'] ?? 'citizen'),
+        (e) => e.name == getValue<String>('role', 'role'),
         orElse: () => UserRole.citizen,
       ),
     );

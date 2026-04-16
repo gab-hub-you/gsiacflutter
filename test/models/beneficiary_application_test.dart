@@ -69,19 +69,19 @@ void main() {
       expect(roundtripped.trackingId, original.trackingId);
     });
 
-    test('toSnakeCase converts correctly', () {
-      expect(BeneficiaryApplication.toSnakeCase('pendingBarangay'), 'pending_barangay');
-      expect(BeneficiaryApplication.toSnakeCase('pendingMunicipal'), 'pending_municipal');
-      expect(BeneficiaryApplication.toSnakeCase('approved'), 'approved');
-      expect(BeneficiaryApplication.toSnakeCase('rejected'), 'rejected');
-      expect(BeneficiaryApplication.toSnakeCase('suspended'), 'suspended');
+    test('statusToDb converts correctly', () {
+      expect(BeneficiaryApplication.statusToDb(ApplicationStatus.pendingBarangay), 'pending_barangay');
+      expect(BeneficiaryApplication.statusToDb(ApplicationStatus.pendingMunicipal), 'pending_municipal');
+      expect(BeneficiaryApplication.statusToDb(ApplicationStatus.approved), 'approved');
+      expect(BeneficiaryApplication.statusToDb(ApplicationStatus.rejected), 'rejected');
+      expect(BeneficiaryApplication.statusToDb(ApplicationStatus.suspended), 'suspended');
     });
 
-    test('fromSnakeCase converts correctly', () {
-      expect(BeneficiaryApplication.fromSnakeCase('pending_barangay'), 'pendingBarangay');
-      expect(BeneficiaryApplication.fromSnakeCase('pending_municipal'), 'pendingMunicipal');
-      expect(BeneficiaryApplication.fromSnakeCase('approved'), 'approved');
-      expect(BeneficiaryApplication.fromSnakeCase(null), '');
+    test('statusFromDb converts correctly', () {
+      expect(BeneficiaryApplication.statusFromDb('pending_barangay'), ApplicationStatus.pendingBarangay);
+      expect(BeneficiaryApplication.statusFromDb('pending_municipal'), ApplicationStatus.pendingMunicipal);
+      expect(BeneficiaryApplication.statusFromDb('approved'), ApplicationStatus.approved);
+      expect(BeneficiaryApplication.statusFromDb(null), ApplicationStatus.pendingBarangay);
     });
 
     test('fromJson defaults to pendingBarangay for unknown status', () {

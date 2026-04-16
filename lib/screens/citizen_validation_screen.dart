@@ -49,16 +49,57 @@ class _CitizenValidationScreenState extends State<CitizenValidationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadMunicipalities();
+    Future.microtask(() => _loadInitialData());
   }
 
-  Future<void> _loadMunicipalities() async {
+  Future<void> _loadInitialData() async {
     setState(() => _isLoadingLocations = true);
+    
+    // Load municipalities first
     final towns = await _locationService.getMunicipalities();
-    setState(() {
-      _municipalities = towns;
-      _isLoadingLocations = false;
-    });
+    
+    if (mounted) {
+      setState(() {
+        _municipalities = towns;
+      });
+
+      // Pre-fill existing user data
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        _firstNameController.text = user.firstName;
+        _lastNameController.text = user.lastName;
+        _middleNameController.text = user.middleName ?? '';
+        _suffixController.text = user.suffix ?? '';
+        _addressController.text = user.address;
+        _selectedDate = user.birthdate;
+        _selectedSex = user.sex;
+        _selectedStatus = user.status;
+
+        // Find municipality code by name
+        if (user.town != null) {
+          final town = _municipalities.firstWhere(
+            (m) => m['name'] == user.town,
+            orElse: () => {},
+          );
+          if (town.isNotEmpty) {
+            _selectedTown = town['name'];
+            _selectedTownCode = town['code'];
+            
+            // Load barangays for the selected town
+            if (_selectedTownCode != null) {
+              await _loadBarangays(_selectedTownCode!);
+              if (mounted) {
+                setState(() {
+                  _selectedBarangay = user.barangay;
+                });
+              }
+            }
+          }
+        }
+      }
+      
+      setState(() => _isLoadingLocations = false);
+    }
   }
 
   Future<void> _loadBarangays(String code) async {

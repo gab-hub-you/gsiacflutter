@@ -257,7 +257,7 @@ class _RequestDocumentScreenState extends State<RequestDocumentScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             isExpanded: true, // Force expansion to prevent overflow
-                            value: _selectedType, // Changed from initialValue to value for better sync
+                            initialValue: _selectedType, // Changed from value to initialValue per lint recommendation
                             decoration: InputDecoration(
                               hintText: _selectedOffice == null ? 'Select Office First' : 'Select Document',
                               prefixIcon: const Icon(Icons.description_outlined),

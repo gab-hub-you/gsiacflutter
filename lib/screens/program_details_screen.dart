@@ -247,7 +247,7 @@ class ProgramDetailsScreen extends StatelessWidget {
           const Row(
             children: [
               Icon(Icons.checklist_rounded, size: 18, color: Color(0xFF0D47A1)),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Required Documents',
                 style: TextStyle(

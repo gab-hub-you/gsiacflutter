@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum ApplicationStatus {
   pendingBarangay,
   pendingMunicipal,
@@ -39,10 +41,7 @@ class BeneficiaryApplication {
       citizenId: json['citizen_id'],
       programId: json['program_id'],
       programName: json['program_name'] ?? 'Social Program',
-      status: ApplicationStatus.values.firstWhere(
-        (e) => fromSnakeCase(json['status']) == e.name,
-        orElse: () => ApplicationStatus.pendingBarangay,
-      ),
+      status: BeneficiaryApplication.statusFromDb(json['status']),
       trackingId: json['tracking_id'],
       dateSubmitted: DateTime.parse(json['date_submitted']),
       supportingDocs: List<String>.from(json['supporting_docs'] ?? []),
@@ -58,7 +57,7 @@ class BeneficiaryApplication {
       'citizen_id': citizenId,
       'program_id': programId,
       'program_name': programName,
-      'status': toSnakeCase(status.name),
+      'status': BeneficiaryApplication.statusToDb(status),
       'tracking_id': trackingId,
       'date_submitted': dateSubmitted.toIso8601String(),
       'supporting_docs': supportingDocs,
@@ -68,15 +67,44 @@ class BeneficiaryApplication {
     };
   }
 
-  static String toSnakeCase(String name) {
-    if (name == 'pendingBarangay') return 'pending_barangay';
-    if (name == 'pendingMunicipal') return 'pending_municipal';
-    return name;
+  static ApplicationStatus statusFromDb(String? dbStatus) {
+    switch (dbStatus) {
+      case 'pending_barangay': return ApplicationStatus.pendingBarangay;
+      case 'pending_municipal': return ApplicationStatus.pendingMunicipal;
+      case 'approved': return ApplicationStatus.approved;
+      case 'rejected': return ApplicationStatus.rejected;
+      case 'suspended': return ApplicationStatus.suspended;
+      default: return ApplicationStatus.pendingBarangay;
+    }
   }
 
-  static String fromSnakeCase(String? name) {
-    if (name == 'pending_barangay') return 'pendingBarangay';
-    if (name == 'pending_municipal') return 'pendingMunicipal';
-    return name ?? '';
+  static String statusToDb(ApplicationStatus status) {
+    switch (status) {
+      case ApplicationStatus.pendingBarangay: return 'pending_barangay';
+      case ApplicationStatus.pendingMunicipal: return 'pending_municipal';
+      case ApplicationStatus.approved: return 'approved';
+      case ApplicationStatus.rejected: return 'rejected';
+      case ApplicationStatus.suspended: return 'suspended';
+    }
+  }
+
+  String get statusText {
+    switch (status) {
+      case ApplicationStatus.pendingBarangay: return 'Pending Barangay';
+      case ApplicationStatus.pendingMunicipal: return 'Pending Municipal';
+      case ApplicationStatus.approved: return 'Approved';
+      case ApplicationStatus.rejected: return 'Rejected';
+      case ApplicationStatus.suspended: return 'Suspended';
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case ApplicationStatus.pendingBarangay: return Colors.orange;
+      case ApplicationStatus.pendingMunicipal: return Colors.indigo;
+      case ApplicationStatus.approved: return Colors.green;
+      case ApplicationStatus.rejected: return Colors.red;
+      case ApplicationStatus.suspended: return Colors.grey;
+    }
   }
 }

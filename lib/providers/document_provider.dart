@@ -16,10 +16,50 @@ class DocumentProvider extends ChangeNotifier {
   static const int _pageSize = 20;
   bool _hasMore = true;
 
+  // Realtime
+  RealtimeChannel? _realtimeChannel;
+
   List<DocumentRequest> get requests => [..._requests];
   bool get isLoading => _isLoading;
   bool get isSubmitting => _isSubmitting;
   bool get hasMore => _hasMore;
+
+  /// Subscribes to document request changes in real-time.
+  void subscribeToRequests(String citizenId) {
+    unsubscribeFromRealtime();
+
+    _realtimeChannel = _supabase
+        .channel('public:document_requests:$citizenId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'document_requests',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'citizen_id',
+            value: citizenId,
+          ),
+          callback: (payload) {
+            debugPrint("Realtime update for document_requests: ${payload.eventType}");
+            // Simple approach: refresh the first page on any change
+            refreshRequests(citizenId);
+          },
+        )
+        .subscribe();
+  }
+
+  void unsubscribeFromRealtime() {
+    if (_realtimeChannel != null) {
+      _supabase.removeChannel(_realtimeChannel!);
+      _realtimeChannel = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    unsubscribeFromRealtime();
+    super.dispose();
+  }
 
   /// Generates a signed URL valid for 1 hour instead of a public URL.
   Future<String> _getSignedUrl(String bucket, String path) async {
@@ -62,7 +102,7 @@ class DocumentProvider extends ChangeNotifier {
         'citizen_id': citizenId,
         'type': type,
         'purpose': purpose,
-        'status': RequestStatus.pending.name,
+        // Status is handled by the database default (pending)
         'issuing_office': office.name,
         'current_office': IssuingOffice.barangay.name,
         'attachment_path': uploadedUrl,

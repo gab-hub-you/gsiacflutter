@@ -7,10 +7,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gsiac/app.dart';
 import 'package:gsiac/screens/splash_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+void main() {
   testWidgets('App load smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: SplashScreen()));
     expect(find.byType(SplashScreen), findsOneWidget);
